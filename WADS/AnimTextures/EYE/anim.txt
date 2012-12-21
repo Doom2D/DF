@@ -1,0 +1,6 @@
+resource=EYE
+framecount=3
+framewidth=64
+frameheight=64
+waitcount=16
+backanimation=0

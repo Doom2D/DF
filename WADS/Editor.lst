@@ -1,0 +1,6 @@
+:TEXTURES
+Editor\Textures\player1point.tga|P1POINT
+Editor\Textures\player2point.tga|P2POINT
+Editor\Textures\dmpoint.tga|DMPOINT
+Editor\Textures\redteampoint.tga|REDPOINT
+Editor\Textures\blueteampoint.tga|BLUEPOINT

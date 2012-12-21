@@ -1,0 +1,6 @@
+resource=WALL02_3
+framecount=4
+framewidth=64
+frameheight=128
+waitcount=8
+backanimation=0

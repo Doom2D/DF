@@ -1,0 +1,6 @@
+resource=POL6
+framecount=2
+framewidth=32
+frameheight=64
+waitcount=16
+backanimation=0

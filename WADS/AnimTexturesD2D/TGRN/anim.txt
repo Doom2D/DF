@@ -1,0 +1,6 @@
+resource=TGRN
+framecount=4
+framewidth=32
+frameheight=128
+waitcount=6
+backanimation=0

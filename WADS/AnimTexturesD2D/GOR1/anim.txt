@@ -1,0 +1,6 @@
+resource=GOR1
+framecount=3
+framewidth=32
+frameheight=64
+waitcount=8
+backanimation=0

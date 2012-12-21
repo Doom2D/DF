@@ -1,0 +1,6 @@
+resource=W73A
+framecount=3
+framewidth=128
+frameheight=128
+waitcount=6
+backanimation=0

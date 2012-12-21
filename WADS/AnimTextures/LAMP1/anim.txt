@@ -1,0 +1,6 @@
+resource=LAMP1
+framecount=4
+framewidth=32
+frameheight=64
+waitcount=8
+backanimation=0

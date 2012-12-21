@@ -1,0 +1,6 @@
+resource=WALL58
+framecount=3
+framewidth=64
+frameheight=128
+waitcount=8
+backanimation=0

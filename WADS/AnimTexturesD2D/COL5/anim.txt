@@ -1,0 +1,6 @@
+resource=COL5
+framecount=2
+framewidth=64
+frameheight=64
+waitcount=10
+backanimation=0
