@@ -2,7 +2,7 @@ unit g_netmsg;
 
 interface
 
-uses g_net, g_triggers;
+uses g_net, g_triggers, Classes, SysUtils;
 
 const
   NET_MSG_INFO   = 100;
@@ -43,7 +43,9 @@ const
   NET_MSG_TSOUND = 151;
   NET_MSG_TMUSIC = 152;
 
-  
+  NET_MSG_MAP_REQUEST = 153;
+  NET_MSG_FILE = 154;
+
   NET_GFX_SPARK   = 1;
   NET_GFX_SPAWN   = 2;
   NET_GFX_TELE    = 3;
@@ -151,10 +153,13 @@ procedure MC_SEND_FullStateRequest();
 procedure MC_SEND_PlayerSettings();
 procedure MC_SEND_CheatRequest(Kind: Byte);
 
+procedure MC_SEND_MapRequest(FileName: AnsiString);
+procedure MH_RECV_MapRequest(C: pTNetClient; P: Pointer);
+
 
 implementation
 
-uses Windows, SysUtils, Math, ENet, e_input, e_fixedbuffer, e_graphics, e_log,
+uses Windows, Math, ENet, e_input, e_fixedbuffer, e_graphics, e_log,
      g_textures, g_gfx, g_sound, g_console, g_basic, g_options, g_main,
      g_game, g_player, g_map, g_panel, g_items, g_weapons, g_phys, g_gui,
      g_language, g_monsters, g_netmaster,
@@ -1958,6 +1963,44 @@ begin
   e_Buffer_Write(@NetOut, Kind);
 
   g_Net_Client_Send(True, NET_CHAN_IMPORTANT);
+end;
+
+procedure create_msg_file(var bytes: AByte; const FileName: TFileName);
+var
+  FileStream : TFileStream;
+begin
+  FileStream:= TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  try
+    if FileStream.Size>0 then begin
+      SetLength(bytes, FileStream.Size+1);
+      bytes[0] := NET_MSG_FILE;
+      FileStream.Read(Pointer(@bytes[1])^, FileStream.Size);
+    end;
+  finally
+    FileStream.Free;
+  end;
+end;
+
+procedure MC_SEND_MapRequest(FileName: AnsiString);
+begin
+  e_Buffer_Write(@NetOut, Byte(NET_MSG_MAP_REQUEST));
+  e_Buffer_Write(@NetOut, FileName);
+
+  g_Net_Client_Send(True, NET_CHAN_IMPORTANT);
+end;
+
+procedure MH_RECV_MapRequest(C: pTNetClient; P: Pointer);
+var
+  FileName: AnsiString;
+  payload: AByte;
+  peer: pENetPeer;
+begin
+  FileName := e_Raw_Read_String(P);
+  create_msg_file(payload, MapsDir + FileName);
+  peer := NetClients[C.ID].Peer;
+  g_Net_SendData(payload, peer, True, NET_CHAN_IMPORTANT);
+
+  payload := nil;
 end;
 
 end.

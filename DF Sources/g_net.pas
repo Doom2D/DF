@@ -53,6 +53,8 @@ type
   end;
   pTNetClient = ^TNetClient;
 
+  AByte = array of Byte;
+
 var
   NetInitDone:     Boolean = False;
   NetMode:         Byte = NET_NONE;
@@ -115,6 +117,8 @@ procedure g_Net_Disconnect(Forced: Boolean = False);
 procedure g_Net_Client_Send(Reliable: Boolean; Chan: Byte = NET_CHAN_GAME);
 function  g_Net_Client_Update(): enet_size_t;
 function  g_Net_Client_UpdateWhileLoading(): enet_size_t;
+
+procedure g_Net_SendData(Data:AByte; peer: pENetPeer; Reliable: Boolean; Chan: Byte = NET_CHAN_GAME);
 
 function  IpToStr(IP: LongWord): string;
 
@@ -626,6 +630,38 @@ begin
   Result := Result + IntToStr(e_Raw_Read_Byte(Ptr)) + '.';
   Result := Result + IntToStr(e_Raw_Read_Byte(Ptr));
   e_Raw_Seek(0);
+end;
+
+procedure g_Net_SendData(Data:AByte; peer: pENetPeer; Reliable: Boolean; Chan: Byte = NET_CHAN_GAME);
+var
+  P: pENetPacket;
+  F: enet_uint32;
+  dataLength: Cardinal;
+begin
+  P := nil;
+
+  dataLength := Length(Data);
+
+  if (Reliable) then
+    F := LongWord(ENET_PACKET_FLAG_RELIABLE)
+  else
+    F := 0;
+
+  if (peer <> nil) then
+  begin
+    P := enet_packet_create(@Data[0], dataLength, F);
+    if not Assigned(P) then Exit;
+    enet_peer_send(peer, Chan, P);
+  end
+  else
+  begin
+    P := enet_packet_create(@Data[0], dataLength, F);
+    if not Assigned(P) then Exit;
+
+    enet_host_widecast(NetHost, Chan, P);
+  end;
+  
+  enet_host_flush(NetHost);
 end;
 
 end.

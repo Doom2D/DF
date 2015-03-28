@@ -3,7 +3,7 @@ Unit g_game;
 Interface
 
 Uses
-  Windows, g_basic, g_player, Messages, e_graphics,
+  Windows, g_basic, g_player, Messages, e_graphics, Classes, g_res_downloader,
   SysUtils, g_sound, MAPSTRUCT, WADEDITOR;
 
 Type
@@ -2307,7 +2307,6 @@ procedure g_Game_StartServer(Map: String; GameMode: Byte;
 var
   ResName: String;
   Team: Byte;
-
 begin
   g_Game_Free();
 
@@ -2401,14 +2400,79 @@ begin
 
 // Настройки игроков и ботов:
   g_Player_Init();
-  
+
   NetState := NET_STATE_GAME;
+end;
+
+function g_Game_DownloadMapFromServer(FileName: string):string;
+var
+  downloadEvent: ENetEvent;
+  OuterLoop: Boolean;
+  MID: Byte;
+  Ptr: Pointer;
+  msgStart: Pointer;
+  msgStream: TMemoryStream;
+  f: TFileStream;
+begin
+  g_Console_Add('Map not found. Request map: ' + FileName);
+  MC_SEND_MapRequest(FileName);
+
+  OuterLoop := True;
+  while OuterLoop do
+  begin
+   while (enet_host_service(NetHost, @downloadEvent, 0) > 0) do
+   begin
+    if (downloadEvent.kind = ENET_EVENT_TYPE_RECEIVE) then
+    begin
+      Ptr := downloadEvent.packet^.data;
+
+      MID := Byte(Ptr^);
+      msgStart := Pointer(Cardinal(Ptr)+1);
+
+      msgStream := TMemoryStream.Create;
+      msgStream.SetSize(downloadEvent.packet^.dataLength-1);
+      msgStream.WriteBuffer(msgStart^, downloadEvent.packet^.dataLength-1);
+      msgStream.Seek(0, soFromBeginning);
+
+      if (MID = NET_MSG_FILE) then
+      begin
+        Result := saveResource(MapsDir, FileName, msgStream, RES_MAP);
+        OuterLoop := False;
+        msgStream.Free();
+        enet_packet_destroy(downloadEvent.packet);
+        break;
+      end
+      else begin
+        msgStream.Free;
+        enet_packet_destroy(downloadEvent.packet);
+      end;
+    end
+    else
+      if (downloadEvent.kind = ENET_EVENT_TYPE_DISCONNECT) then
+      begin
+        if (downloadEvent.data <= 7) then
+          g_Console_Add(_lc[I_NET_MSG_ERROR] + _lc[I_NET_ERR_CONN] + ' ' +
+            _lc[TStrings_Locale(Cardinal(I_NET_DISC_NONE) + downloadEvent.data)], True);
+        OuterLoop := False;
+        Break;
+      end;
+   end;
+
+   PreventWindowFromLockUp;
+
+   e_PollKeyboard();
+   if (e_KeyBuffer[1] = $080) or (e_KeyBuffer[57] = $080) then
+   begin
+    break;
+   end;
+  end;
 end;
 
 procedure g_Game_StartClient(Addr: String; Port: Word; PW: String = 'ASS');
 var
   ResName: String;
   Map: String;
+  WadName: string;
   Ptr: Pointer;
   T: Cardinal;
   MID: Byte;
@@ -2416,6 +2480,7 @@ var
   OuterLoop: Boolean;
   WHash: TMD5Digest;
   F: file;
+  newResPath: string;
 begin
   g_Game_Free();
   State := 0;
@@ -2467,7 +2532,8 @@ begin
         NetMyID := e_Raw_Read_Byte(Ptr);
         NetPlrUID := e_Raw_Read_Word(Ptr);
 
-        gGameSettings.WAD := MapsDir + e_Raw_Read_String(Ptr);
+        WadName := e_Raw_Read_String(Ptr);
+        gGameSettings.WAD := MapsDir + WadName;
         Map := e_Raw_Read_String(Ptr);
 
         WHash := e_Raw_Read_MD5(Ptr);
@@ -2478,10 +2544,11 @@ begin
         gGameSettings.Options := e_Raw_Read_LongWord(Ptr);
         T := e_Raw_Read_LongWord(Ptr);
 
-        if FileExists(gGameSettings.WAD) then
+        newResPath := ResourceExist(MapsDir, WadName, WHash, RES_MAP);
+        if newResPath = '' then
         begin
-          gWADHash := MD5File(gGameSettings.WAD);
-          if not MD5Compare(gWADHash, WHash) then
+          newResPath := g_Game_DownloadMapFromServer(WadName);
+          if newResPath = '' then
           begin
             g_FatalError(_lc[I_NET_ERR_HASH]);
             enet_packet_destroy(NetEvent.packet);
@@ -2490,6 +2557,7 @@ begin
           end;
         end;
 
+        gGameSettings.WAD := newResPath;
         ResName := Map;
 
         gPlayer1 := g_Player_Get(g_Player_Create(gPlayer1Settings.Model,
