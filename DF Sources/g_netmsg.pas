@@ -2,7 +2,7 @@ unit g_netmsg;
 
 interface
 
-uses g_net, g_triggers, Classes, SysUtils;
+uses g_net, g_triggers, Classes, SysUtils, md5asm;
 
 const
   NET_MSG_INFO   = 100;
@@ -44,7 +44,9 @@ const
   NET_MSG_TMUSIC = 152;
 
   NET_MSG_MAP_REQUEST = 153;
-  NET_MSG_FILE = 154;
+  NET_MSG_MAP_RESPONSE = 154;
+  NET_MSG_RES_REQUEST = 155;
+  NET_MSG_RES_RESPONSE = 154;
 
   NET_GFX_SPARK   = 1;
   NET_GFX_SPAWN   = 2;
@@ -153,9 +155,32 @@ procedure MC_SEND_FullStateRequest();
 procedure MC_SEND_PlayerSettings();
 procedure MC_SEND_CheatRequest(Kind: Byte);
 
-procedure MC_SEND_MapRequest(FileName: AnsiString);
+procedure MC_SEND_MapRequest();
+procedure MC_SEND_ResRequest(resName: AnsiString);
 procedure MH_RECV_MapRequest(C: pTNetClient; P: Pointer);
+procedure MH_RECV_ResRequest(C: pTNetClient; P: Pointer);
 
+type
+  TExternalResourceInfo = record
+    Name: string[255];
+    md5: TMD5Digest;
+  end;
+
+  TResDataMsg = record
+    MsgId: Byte;
+    FileSize: Integer;
+    FileData: AByte;
+  end;
+
+  TMapDataMsg = record
+    MsgId: Byte;
+    FileSize: Integer;
+    FileData: AByte;
+    ExternalResources: array of TExternalResourceInfo;
+  end;
+
+function MapDataFromMsgStream(msgStream: TMemoryStream):TMapDataMsg;
+function ResDataFromMsgStream(msgStream: TMemoryStream):TResDataMsg;
 
 implementation
 
@@ -494,11 +519,11 @@ begin
   g_ProcessResourceStr(gMapInfo.Map, nil, nil, @Map);
 
   e_Buffer_Clear(@NetOut);
-  
+
   e_Buffer_Write(@NetOut, Byte(NET_MSG_INFO));
   e_Buffer_Write(@NetOut, ID);
   e_Buffer_Write(@NetOut, NetClients[ID].Player);
-  e_Buffer_Write(@NetOut, ExtractRelativePath(MapsDir, gGameSettings.WAD));
+  e_Buffer_Write(@NetOut, ExtractFileName(gGameSettings.WAD));
   e_Buffer_Write(@NetOut, Map);
   e_Buffer_Write(@NetOut, gWADHash);
   e_Buffer_Write(@NetOut, gGameSettings.GameMode);
@@ -1965,42 +1990,153 @@ begin
   g_Net_Client_Send(True, NET_CHAN_IMPORTANT);
 end;
 
-procedure create_msg_file(var bytes: AByte; const FileName: TFileName);
+function ReadFile(const FileName: TFileName): AByte;
 var
   FileStream : TFileStream;
 begin
+  Result := nil;
   FileStream:= TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
-    if FileStream.Size>0 then begin
-      SetLength(bytes, FileStream.Size+1);
-      bytes[0] := NET_MSG_FILE;
-      FileStream.Read(Pointer(@bytes[1])^, FileStream.Size);
+    if FileStream.Size>0 then
+    begin
+      SetLength(Result, FileStream.Size);
+      FileStream.Read(Result[0], FileStream.Size);
     end;
   finally
     FileStream.Free;
   end;
 end;
 
-procedure MC_SEND_MapRequest(FileName: AnsiString);
+function CreateMapDataMsg(const FileName: TFileName; ResList: TStringList): TMapDataMsg;
+var
+  i: Integer;
+begin
+  Result.MsgId := NET_MSG_MAP_RESPONSE;
+  Result.FileData := ReadFile(FileName);
+  Result.FileSize := Length(Result.FileData);
+
+  SetLength(Result.ExternalResources, ResList.Count);
+  for i:=0 to ResList.Count-1 do
+  begin
+    Result.ExternalResources[i].Name := ResList.Strings[i];
+    Result.ExternalResources[i].md5 := MD5File(GameDir+'\wads\'+ResList.Strings[i]);
+  end;
+
+end;
+
+procedure ResDataMsgToBytes(var bytes: AByte; const ResData: TResDataMsg);
+var
+  ResultStream: TMemoryStream;
+begin
+  ResultStream := TMemoryStream.Create;
+  
+  ResultStream.WriteBuffer(ResData.MsgId, SizeOf(ResData.MsgId)); //msgId
+  ResultStream.WriteBuffer(ResData.FileSize, SizeOf(ResData.FileSize));  //file size
+  ResultStream.WriteBuffer(ResData.FileData[0], ResData.FileSize);       //file data
+
+  SetLength(bytes, ResultStream.Size);
+  ResultStream.Seek(0, soFromBeginning);
+  ResultStream.ReadBuffer(bytes[0], ResultStream.Size);
+  
+  ResultStream.Free;
+end;
+
+function ResDataFromMsgStream(msgStream: TMemoryStream):TResDataMsg;
+begin
+  msgStream.ReadBuffer(Result.MsgId, SizeOf(Result.MsgId));
+  msgStream.ReadBuffer(Result.FileSize, SizeOf(Result.FileSize));
+  SetLength(Result.FileData, Result.FileSize);
+  msgStream.ReadBuffer(Result.FileData[0], Result.FileSize);
+end;
+
+procedure MapDataMsgToBytes(var bytes: AByte; const MapDataMsg: TMapDataMsg);
+var
+  ResultStream: TMemoryStream;
+  resCount: Integer;
+begin
+  resCount := Length(MapDataMsg.ExternalResources);
+
+  ResultStream := TMemoryStream.Create;
+  
+  ResultStream.WriteBuffer(MapDataMsg.MsgId, SizeOf(MapDataMsg.MsgId)); //msgId
+  ResultStream.WriteBuffer(MapDataMsg.FileSize, SizeOf(MapDataMsg.FileSize));  //file size
+  ResultStream.WriteBuffer(MapDataMsg.FileData[0], MapDataMsg.FileSize);       //file data
+
+  ResultStream.WriteBuffer(resCount, SizeOf(resCount));   //res count
+  ResultStream.WriteBuffer(MapDataMsg.ExternalResources[0], resCount*SizeOf(TExternalResourceInfo)); //res data
+
+  SetLength(bytes, ResultStream.Size);
+  ResultStream.Seek(0, soFromBeginning);
+  ResultStream.ReadBuffer(bytes[0], ResultStream.Size);
+  
+  ResultStream.Free;
+end;
+
+function MapDataFromMsgStream(msgStream: TMemoryStream):TMapDataMsg;
+var
+  resCount: Integer;
+begin
+  msgStream.ReadBuffer(Result.MsgId, SizeOf(Result.MsgId));
+  msgStream.ReadBuffer(Result.FileSize, SizeOf(Result.FileSize));   //file size
+
+  SetLength(Result.FileData, Result.FileSize);
+  msgStream.ReadBuffer(Result.FileData[0], Result.FileSize);  //file data
+
+  msgStream.ReadBuffer(resCount, SizeOf(resCount));  //res count
+  SetLength(Result.ExternalResources, resCount);
+
+  msgStream.ReadBuffer(Result.ExternalResources[0], resCount * SizeOf(TExternalResourceInfo)); //res data
+end;
+
+procedure MC_SEND_MapRequest();
 begin
   e_Buffer_Write(@NetOut, Byte(NET_MSG_MAP_REQUEST));
-  e_Buffer_Write(@NetOut, FileName);
+  g_Net_Client_Send(True, NET_CHAN_IMPORTANT);
+end;
 
+procedure MC_SEND_ResRequest(resName: AnsiString);
+begin
+  e_Buffer_Write(@NetOut, Byte(NET_MSG_RES_REQUEST));
+  e_Buffer_Write(@NetOut, resName);
   g_Net_Client_Send(True, NET_CHAN_IMPORTANT);
 end;
 
 procedure MH_RECV_MapRequest(C: pTNetClient; P: Pointer);
 var
-  FileName: AnsiString;
   payload: AByte;
   peer: pENetPeer;
+  mapDataMsg: TMapDataMsg;
 begin
-  FileName := e_Raw_Read_String(P);
-  create_msg_file(payload, MapsDir + FileName);
+  mapDataMsg := CreateMapDataMsg(gGameSettings.WAD, gExternalResources);
   peer := NetClients[C.ID].Peer;
+
+  MapDataMsgToBytes(payload, mapDataMsg);
   g_Net_SendData(payload, peer, True, NET_CHAN_IMPORTANT);
 
   payload := nil;
+  mapDataMsg.FileData := nil;
+  mapDataMsg.ExternalResources := nil;
+end;
+
+procedure MH_RECV_ResRequest(C: pTNetClient; P: Pointer);
+var
+  payload: AByte;
+  peer: pENetPeer;
+  FileName: String;
+  resDataMsg: TResDataMsg;
+begin
+  FileName := e_Raw_Read_String(P);
+  peer := NetClients[C.ID].Peer;
+
+  if gExternalResources.IndexOf(FileName) > -1 then
+  begin
+    resDataMsg.MsgId := NET_MSG_RES_RESPONSE;
+    resDataMsg.FileData := ReadFile(GameDir+'\wads\'+FileName);
+    resDataMsg.FileSize := Length(resDataMsg.FileData);
+
+    ResDataMsgToBytes(payload, resDataMsg);
+    g_Net_SendData(payload, peer, True, NET_CHAN_IMPORTANT);
+  end;
 end;
 
 end.

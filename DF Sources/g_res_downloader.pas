@@ -2,16 +2,10 @@ unit g_res_downloader;
 
 interface
 
-uses sysutils, Classes, md5asm;
+uses sysutils, Classes, md5asm, g_net, g_netmsg, g_console, g_main;
 
-type GResource = (
-  RES_MAP,
-  RES_WAD,
-  RES_MODEL
-);
-
-function ResourceExist(const path, filename: string; resMd5:TMD5Digest; resType:GResource):string;
-function saveResource(const path, filename: string; resStream: TMemoryStream; resType:GResource):string;
+function MapExist(const path, filename: string; resMd5:TMD5Digest):string;
+function g_res_DownloadMapFromServer(FileName: string):string;
 
 implementation
 
@@ -47,7 +41,12 @@ begin
   Result := MD5Compare(gResHash, resMd5);
 end;
 
-function ResourceExist(const path, filename: string; resMd5:TMD5Digest; resType:GResource):string;
+function ResourceExists(const path, filename: string; resMd5:TMD5Digest):Boolean;
+begin
+  Result := FileExists(path + filename) and compareFile(path + filename, resMd5)
+end;
+
+function MapExist(const path, filename: string; resMd5:TMD5Digest):string;
 var
   res: string;
   files: TStringList;
@@ -55,7 +54,7 @@ var
 begin
   Result := '';
 
-  if FileExists(path + filename) and compareFile(path + filename, resMd5) then
+  if ResourceExists(path, filename, resMd5) then
   begin
     Result := path + filename;
     Exit;
@@ -77,7 +76,7 @@ begin
   files.Free;
 end;
 
-function saveResource(const path, filename: string; resStream: TMemoryStream; resType:GResource):string;
+function saveMap(const path, filename: string; data: array of Byte):string;
 var
   resFile: TFileStream;
 begin
@@ -87,10 +86,49 @@ begin
     begin
       CreateDir(path + DOWNLOAD_DIR);
     end;
-    resStream.SaveToFile(Result);
+    resFile := TFileStream.Create(Result, fmCreate);
+    resFile.WriteBuffer(data[0], Length(data));
+    resFile.Free
   except
     Result := '';
   end;
+end;
+
+function g_res_DownloadMapFromServer(FileName: string):string;
+var
+  msgStream: TMemoryStream;
+  resStream: TFileStream;
+  mapData: TMapDataMsg;
+  i: Integer;
+  resData: TResDataMsg;
+begin
+  g_Console_Add('Map `' + FileName +'` not found. Download from server');
+  MC_SEND_MapRequest();
+
+  msgStream := g_net_Wait_Event(NET_MSG_MAP_RESPONSE);
+  mapData := MapDataFromMsgStream(msgStream);
+  msgStream.Free;
+
+  for i:=0 to High(mapData.ExternalResources) do
+  begin
+    if not ResourceExists(GameDir + '\wads\', mapData.ExternalResources[i].Name, mapData.ExternalResources[i].md5) then
+    begin
+      g_Console_Add('Wad `' + mapData.ExternalResources[i].Name +'` not found. Download from server');
+      MC_SEND_ResRequest(mapData.ExternalResources[i].Name);
+
+      msgStream := g_net_Wait_Event(NET_MSG_RES_RESPONSE);
+      resData := ResDataFromMsgStream(msgStream);
+
+      resStream := TFileStream.Create(GameDir+'\wads\'+mapData.ExternalResources[i].Name, fmCreate);
+      resStream.WriteBuffer(resData.FileData[0], resData.FileSize);
+
+      resData.FileData := nil;
+      resStream.Free;
+      msgStream.Free;
+    end;
+  end;
+
+  Result := saveMap(MapsDir, FileName, mapData.FileData);
 end;
 
 end.
