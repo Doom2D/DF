@@ -1659,7 +1659,8 @@ begin
           if (Data.ShotTarget = TRIGGER_SHOT_TARGET_NONE) or (TargetUID > 0) then
           begin
             Result := True;
-            if (Data.ShotTarget = TRIGGER_SHOT_TARGET_NONE) or
+            if (Data.ShotIntSight = 0) or
+               (Data.ShotTarget = TRIGGER_SHOT_TARGET_NONE) or
                (TargetUID = ShotSightTarget) then
               MakeShot(Trigger, wx, wy, xd, yd, TargetUID)
             else
