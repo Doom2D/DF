@@ -313,6 +313,7 @@ type
     I_NET_SLIST_SERVERS,
     I_NET_SLIST_HELP,
     I_NET_SLIST_WAIT,
+    I_NET_SLIST_NO_ACCESS,
 
     I_NET_SLIST_FETCH,
     I_NET_SLIST_RETRIEVED,
@@ -1140,6 +1141,8 @@ const
                                        '[ENTER] - присоединиться   [SPACE] - обновить   [ESC] - меню'),
     ('NET SLIST WAIT',                 'Please wait...',
                                        'Подождите...'),
+    ('NET SLIST NO ACCESS',            'N/A',
+                                       'Н/Д'),
 
     ('NET SLIST FETCH',                'Fetching server list...',
                                        'Получаем список серверов...'),

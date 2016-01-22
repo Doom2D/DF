@@ -143,6 +143,7 @@ begin
           SL[I].Protocol := e_Raw_Read_Byte(NetMEvent.packet^.data);
           SL[I].Password := e_Raw_Read_Byte(NetMEvent.packet^.data) = 1;
           enet_address_set_host(Addr(SL[I].PingAddr), PChar(Addr(SL[I].IP[1])));
+          SL[I].Ping := -1;
           SL[I].PingAddr.port := SL[I].Port + 1;
         end;
       end;
@@ -199,13 +200,13 @@ begin
           Password := e_Buffer_Read_Byte(@NetIn) = 1;
           Bots := e_Buffer_Read_Word(@NetIn);
           Ping := e_Buffer_Read_LongInt(@NetIn);
-          Ping := 1 + GetCurrentTime() - Ping;
+          Ping := GetCurrentTime() - Ping;
         end;
         Inc(Cnt);
         break;
       end;
   end;
-  
+
   enet_socket_destroy(Sock);
 end;
 
@@ -436,11 +437,8 @@ begin
   y := 90;
   for I := 0 to High(SL) do
   begin
-    if (SL[I].Ping = 0) or (SL[I].Ping > 9999) then
-    begin
-      e_TextureFontPrintEx(mx - 50, y, 'TIME', gStdFont, 255, 0, 0, 1);
-      e_TextureFontPrintEx(mx - 50, y + 16, 'OUT', gStdFont, 255, 0, 0, 1);
-    end
+    if (SL[I].Ping < 0) or (SL[I].Ping > 9999) then
+      e_TextureFontPrintEx(mx - 50, y, _lc[I_NET_SLIST_NO_ACCESS], gStdFont, 255, 0, 0, 1)
     else
       e_TextureFontPrintEx(mx - 50, y, IntToStr(SL[I].Ping), gStdFont, 255, 255, 255, 1);
 
