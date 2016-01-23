@@ -6538,8 +6538,8 @@ procedure TBot.UpdateMove;
 
 begin
 // Возможно, нажимаем кнопку:
-  if Rnd(16) then
-    PressKey(KEY_OPEN);
+  {if Rnd(16) then
+    PressKey(KEY_OPEN);}
 
 // Если под лифтом или ступеньками, то, возможно, прыгаем:
   if OnLadder() or ((BelowLadder() or BelowLiftUp()) and Rnd(8)) then
@@ -6656,7 +6656,7 @@ begin
         Jump()
       else // иначе попытаемся в другую сторону
         if Random(2) = 0 then
-          PressKey(KEY_OPEN)
+          //PressKey(KEY_OPEN)
         else
           Turn();
     end;
