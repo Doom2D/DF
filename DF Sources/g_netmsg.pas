@@ -2221,8 +2221,8 @@ begin
 
   if not Quiet then
   begin
-    if gItems[ID].ItemType in [ITEM_ARMOR_BLUE, ITEM_SPHERE_BLUE, ITEM_SPHERE_WHITE,
-                               ITEM_MEDKIT_BLACK, ITEM_INVUL, ITEM_INVIS, ITEM_JETPACK] then
+    if gItems[ID].ItemType in [ITEM_SPHERE_BLUE, ITEM_SPHERE_WHITE, ITEM_INVUL,
+                               ITEM_INVIS, ITEM_MEDKIT_BLACK, ITEM_JETPACK] then
       g_Sound_PlayExAt('SOUND_ITEM_GETRULEZ',
         gItems[ID].Obj.X, gItems[ID].Obj.Y)
       else
