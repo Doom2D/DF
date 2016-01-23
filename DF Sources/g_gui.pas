@@ -2727,7 +2727,7 @@ begin
       Break;
     end;
 
-  if FIndex <= FHeight then
+  if FIndex < FHeight then
     FStartLine := 0
   else
     FStartLine := Min(FIndex, Length(FItems)-FHeight);
