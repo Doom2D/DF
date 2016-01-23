@@ -308,6 +308,7 @@ begin
   gDrawBackGround := config.ReadBool('Game', 'BackGround', True);
   gShowMessages := config.ReadBool('Game', 'Messages', True);
   gRevertPlayers := config.ReadBool('Game', 'RevertPlayers', False);
+  gChatBubble := Min(Max(config.ReadInt('Game', 'ChatBubble', 4), 0), 4);
 
 // Геймплей в своей игре
   gcMap := config.ReadStr('GameplayCustom', 'Map', '');
@@ -498,6 +499,7 @@ begin
   config.WriteBool('Game', 'BackGround', gDrawBackGround);
   config.WriteBool('Game', 'Messages', gShowMessages);
   config.WriteBool('Game', 'RevertPlayers', gRevertPlayers);
+  config.WriteInt('Game', 'ChatBubble', gChatBubble);
 
   config.WriteStr ('GameplayCustom', 'Map', gcMap);
   config.WriteStr ('GameplayCustom', 'GameMode', gcGameMode);

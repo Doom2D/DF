@@ -85,6 +85,7 @@ begin
   gDrawBackGround := TGUISwitch(menu.GetControl('swBackGround')).ItemIndex = 0;
   gShowMessages := TGUISwitch(menu.GetControl('swMessages')).ItemIndex = 0;
   gRevertPlayers := TGUISwitch(menu.GetControl('swRevertPlayers')).ItemIndex = 0;
+  gChatBubble := TGUISwitch(menu.GetControl('swChatBubble')).ItemIndex;
 
   menu := TGUIMenu(g_GUI_GetWindow('OptionsControlsMenu').GetControl('mOptionsControlsMenu'));
 
@@ -290,6 +291,9 @@ begin
 
   with TGUISwitch(menu.GetControl('swRevertPlayers')) do
     if gRevertPlayers then ItemIndex := 0 else ItemIndex := 1;
+
+  with TGUISwitch(menu.GetControl('swChatBubble')) do
+    ItemIndex := gChatBubble;
 
   menu := TGUIMenu(g_GUI_GetWindow('OptionsPlayersP1Menu').GetControl('mOptionsPlayersP1Menu'));
 
@@ -2475,6 +2479,15 @@ begin
       Name := 'swRevertPlayers';
       AddItem(_lc[I_MENU_YES]);
       AddItem(_lc[I_MENU_NO]);
+    end;
+    with AddSwitch(_lc[I_MENU_GAME_CHAT_BUBBLE]) do
+    begin
+      Name := 'swChatBubble';
+      AddItem(_lc[I_MENU_GAME_CHAT_TYPE_NONE]);
+      AddItem(_lc[I_MENU_GAME_CHAT_TYPE_SIMPLE]);
+      AddItem(_lc[I_MENU_GAME_CHAT_TYPE_ADV]);
+      AddItem(_lc[I_MENU_GAME_CHAT_TYPE_COLOR]);
+      AddItem(_lc[I_MENU_GAME_CHAT_TYPE_TEXTURE]);
     end;
     ReAlign();
   end;
