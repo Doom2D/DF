@@ -1876,7 +1876,12 @@ begin
 
     idx := SelectMapForm.lbMapList.Items.IndexOf(MapName);
     SelectMapForm.lbMapList.ItemIndex := idx;
-  end;
+  end
+  else
+    if SelectMapForm.lbMapList.Count > 0 then
+      SelectMapForm.lbMapList.ItemIndex := 0
+    else
+      SelectMapForm.lbMapList.ItemIndex := -1;
 
   if mapN = '' then
     idx := -1
