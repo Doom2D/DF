@@ -6546,10 +6546,30 @@ procedure TBot.UpdateMove;
     Result := True;
   end;
 
+  function IsSafeTrigger(): Boolean;
+  var
+    a: Integer;
+  begin
+    Result := True;
+    if gTriggers = nil then
+      Exit;
+    for a := 0 to High(gTriggers) do
+      if Collide(gTriggers[a].X,
+                 gTriggers[a].Y,
+                 gTriggers[a].Width,
+                 gTriggers[a].Height) and
+         (gTriggers[a].TriggerType in [TRIGGER_EXIT, TRIGGER_CLOSEDOOR,
+                                       TRIGGER_CLOSETRAP, TRIGGER_TRAP,
+                                       TRIGGER_PRESS, TRIGGER_ON, TRIGGER_OFF,
+                                       TRIGGER_ONOFF, TRIGGER_SPAWNMONSTER,
+                                       TRIGGER_DAMAGE, TRIGGER_SHOT]) then
+        Result := False;
+  end;
+
 begin
 // Возможно, нажимаем кнопку:
-  {if Rnd(16) then
-    PressKey(KEY_OPEN);}
+  if Rnd(16) and IsSafeTrigger() then
+    PressKey(KEY_OPEN);
 
 // Если под лифтом или ступеньками, то, возможно, прыгаем:
   if OnLadder() or ((BelowLadder() or BelowLiftUp()) and Rnd(8)) then
@@ -6666,8 +6686,10 @@ begin
         Jump()
       else // иначе попытаемся в другую сторону
         if Random(2) = 0 then
-          //PressKey(KEY_OPEN)
-        else
+        begin
+          if IsSafeTrigger() then
+            PressKey(KEY_OPEN);
+        end else
           Turn();
     end;
 end;
