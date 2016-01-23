@@ -2056,12 +2056,22 @@ end;
 procedure TPlayer.DrawBubble();
 var
   bubX, bubY: Integer;
+  ID: LongWord;
   Rb, Gb, Bb,
   Rw, Gw, Bw: SmallInt;
   Dot: Byte;
 begin
   bubX := FObj.X+FObj.Rect.X + IfThen(FDirection = D_LEFT, -4, 18);
   bubY := FObj.Y+FObj.Rect.Y - 18;
+  if g_Texture_Get('TEXTURE_PLAYER_TALKBUBBLE', ID) then
+  begin
+    if FDirection = D_RIGHT then
+      e_Draw(ID, bubX - 4    , bubY - 5, 0, True, False)
+    else
+      e_Draw(ID, bubX - 4 - 4, bubY - 5, 0, True, False, M_HORIZONTAL);
+    Exit;
+  end;
+
   Rb := 64;
   Gb := 64;
   Bb := 64;
