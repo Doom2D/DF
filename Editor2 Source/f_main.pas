@@ -4141,6 +4141,15 @@ begin
         end;
         Exit;
       end;
+      vleObjectProperty.FindRow(_lc[I_PROP_TR_PUSH_ANGLE], i);
+      if i <= 0 then
+        vleObjectProperty.FindRow(_lc[I_PROP_TR_MESSAGE_TEXT], i);
+      if i > 0 then
+      begin
+        vleObjectProperty.Row := i;
+        vleObjectProperty.SetFocus();
+        Exit;
+      end;
     end;
   end;
 end;
