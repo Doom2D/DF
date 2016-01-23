@@ -2977,7 +2977,7 @@ begin
       else
         res := False;
     end;
-    
+
     if res then
     begin
       SetLength(SelectedObjects, 1);
@@ -3264,32 +3264,34 @@ begin
 
             SELECTFLAG_SHOTPANEL:
             // Панель индикации выстрела:
-              with gTriggers[SelectedObjects[GetFirstSelected()].ID] do
-                if TriggerType = TRIGGER_SHOT then
-                  begin
-                    IDArray := ObjectInRect(X-MapOffset.X,
-                                            Y-MapOffset.Y,
-                                            2, 2, OBJECT_PANEL, True);
-                    if IDArray <> nil then
-                      begin
-                        for i := 0 to High(IDArray) do
-                          if ((gPanels[IDArray[i]].PanelType in
-                               [PANEL_WALL, PANEL_BACK, PANEL_FORE,
-                                PANEL_WATER, PANEL_ACID1, PANEL_ACID2,
-                                PANEL_STEP]) or
-                              (gPanels[IDArray[i]].PanelType = PANEL_OPENDOOR) or
-                              (gPanels[IDArray[i]].PanelType = PANEL_CLOSEDOOR)) and
-                             (gPanels[IDArray[i]].TextureName <> '') then
-                          begin
-                            gTriggers[SelectedObjects[
-                              GetFirstSelected() ].ID].Data.ShotPanelID := IDArray[i];
-                            Break;
-                          end;
-                      end
-                    else
-                      gTriggers[SelectedObjects[
-                        GetFirstSelected() ].ID].Data.ShotPanelID := -1;
-                  end;
+              begin
+                if gTriggers[SelectedObjects[
+                     GetFirstSelected() ].ID].TriggerType = TRIGGER_SHOT then
+                begin
+                  IDArray := ObjectInRect(X-MapOffset.X,
+                                          Y-MapOffset.Y,
+                                          2, 2, OBJECT_PANEL, True);
+                  if IDArray <> nil then
+                    begin
+                      for i := 0 to High(IDArray) do
+                        if ((gPanels[IDArray[i]].PanelType in
+                             [PANEL_WALL, PANEL_BACK, PANEL_FORE,
+                              PANEL_WATER, PANEL_ACID1, PANEL_ACID2,
+                              PANEL_STEP]) or
+                            (gPanels[IDArray[i]].PanelType = PANEL_OPENDOOR) or
+                            (gPanels[IDArray[i]].PanelType = PANEL_CLOSEDOOR)) and
+                           (gPanels[IDArray[i]].TextureName <> '') then
+                        begin
+                          gTriggers[SelectedObjects[
+                            GetFirstSelected() ].ID].Data.ShotPanelID := IDArray[i];
+                          Break;
+                        end;
+                    end
+                  else
+                    gTriggers[SelectedObjects[
+                      GetFirstSelected() ].ID].Data.ShotPanelID := -1;
+                end;
+              end;
           end;
 
           SelectFlag := SELECTFLAG_SELECTED;
