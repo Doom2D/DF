@@ -570,10 +570,10 @@ begin
 
   if ConsoleHistory <> nil then
   begin
-    if Length(ConsoleHistory) > ((gScreenHeight div 2) div CHeight)-1 then
-      b := Length(ConsoleHistory)-((gScreenHeight div 2) div CHeight)+1
-    else
-      b := 0;
+    b := 0;
+    if CHeight > 0 then
+      if Length(ConsoleHistory) > ((gScreenHeight div 2) div CHeight)-1 then
+        b := Length(ConsoleHistory)-((gScreenHeight div 2) div CHeight)+1;
 
     b := Max(b-Offset, 0);
     d := Max(High(ConsoleHistory)-Offset, 0);

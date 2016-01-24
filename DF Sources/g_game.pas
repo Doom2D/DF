@@ -953,15 +953,7 @@ begin
 end;
 
 procedure g_Game_Init();
-const
-  CHRWDT1 = 32;
-  CHRHGT1 = 32;
-  FNTSPC1 = -2;
-  CHRWDT2 = 16;
-  CHRHGT2 = 16;
-  FNTSPC2 = -1;
 var
-  ID: DWORD;
   SR: TSearchRec;
 begin
   gExit := 0;
@@ -972,12 +964,10 @@ begin
   g_Texture_CreateWADEx('INTER', GameWAD+':TEXTURES\INTER');
   g_Texture_CreateWADEx('ENDGAME_EN', GameWAD+':TEXTURES\ENDGAME_EN');
   g_Texture_CreateWADEx('ENDGAME_RU', GameWAD+':TEXTURES\ENDGAME_RU');
-  g_Texture_CreateWADEx('FONT_STD', GameWAD+':FONTS\STDFONT');
-  if g_Texture_Get('FONT_STD', ID) then
-    e_TextureFontBuild(ID, gStdFont, 16, 16, -7);
 
-  LoadFont('MENUTXT', 'MENUFONT', CHRWDT1, CHRHGT1, FNTSPC1, gMenuFont);
-  LoadFont('SMALLTXT', 'SMALLFONT', CHRWDT2, CHRHGT2, FNTSPC2, gMenuSmallFont);
+  LoadStdFont('STDTXT', 'STDFONT', gStdFont);
+  LoadFont('MENUTXT', 'MENUFONT', gMenuFont);
+  LoadFont('SMALLTXT', 'SMALLFONT', gMenuSmallFont);
 
   g_Game_ClearLoading();
   g_Game_SetLoadingText(Format('Doom 2D: Forever %s', [GAME_VERSION]), 0, False);

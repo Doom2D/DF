@@ -8,8 +8,8 @@ uses
 procedure g_Menu_Init();
 procedure g_Menu_Free();
 procedure g_Menu_Reset();
-procedure LoadFont(txtres, fntres: string; cwdt, chgt: Byte; spc: ShortInt;
-                   var FontID: DWORD);
+procedure LoadStdFont(cfgres, texture: string; var FontID: DWORD);
+procedure LoadFont(txtres, fntres: string; var FontID: DWORD);
 procedure g_Menu_AskLanguage();
 
 procedure g_Menu_Show_SaveMenu();
@@ -687,9 +687,45 @@ begin
   ProcChangeColor(nil);
 end;
 
-procedure LoadFont(txtres, fntres: string; cwdt, chgt: Byte; spc: ShortInt;
-                   var FontID: DWORD);
+procedure LoadStdFont(cfgres, texture: string; var FontID: DWORD);
 var
+  cwdt, chgt: Byte;
+  spc: ShortInt;
+  ID: DWORD;
+  wad: TWADEditor_1;
+  cfgdata: Pointer;
+  cfglen: Integer;
+  config: TConfig;
+begin
+  cfglen := 0;
+
+  wad := TWADEditor_1.Create;
+  if wad.ReadFile(GameWAD) then
+    wad.GetResource('FONTS', cfgres, cfgdata, cfglen);
+  wad.Free();
+
+  if cfglen <> 0 then
+  begin
+    g_Texture_CreateWADEx('FONT_STD', GameWAD+':FONTS\'+texture);
+
+    config := TConfig.CreateMem(cfgdata, cfglen);
+    cwdt := Min(Max(config.ReadInt('FontMap', 'CharWidth', 0), 0), 255);
+    chgt := Min(Max(config.ReadInt('FontMap', 'CharHeight', 0), 0), 255);
+    spc := Min(Max(config.ReadInt('FontMap', 'Kerning', 0), -128), 127);
+
+    if g_Texture_Get('FONT_STD', ID) then
+      e_TextureFontBuild(ID, FontID, cwdt, chgt, spc);
+
+    config.Free();
+  end;
+
+  if cfglen <> 0 then FreeMem(cfgdata);
+end;
+
+procedure LoadFont(txtres, fntres: string; var FontID: DWORD);
+var
+  cwdt, chgt: Byte;
+  spc: ShortInt;
   CharID: DWORD;
   wad: TWADEditor_1;
   cfgdata, fntdata: Pointer;
@@ -711,9 +747,13 @@ begin
 
   if cfglen <> 0 then
   begin
+    config := TConfig.CreateMem(cfgdata, cfglen);
+    cwdt := Min(Max(config.ReadInt('FontMap', 'CharWidth', 0), 0), 255);
+    chgt := Min(Max(config.ReadInt('FontMap', 'CharHeight', 0), 0), 255);
+
+    spc := Min(Max(config.ReadInt('FontMap', 'Kerning', 0), -128), 127);
     FontID := e_CharFont_Create(spc);
 
-    config := TConfig.CreateMem(cfgdata, cfglen);
     for a := 0 to 255 do
     begin
       chrwidth := config.ReadInt(IntToStr(a), 'Width', 0);

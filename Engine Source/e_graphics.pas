@@ -1429,6 +1429,7 @@ end;
 
 procedure e_TextureFontPrint(X, Y: GLint; Text: string; FontID: DWORD);
 begin
+  if Integer(FontID) > High(e_TextureFonts) then Exit;
   if Text = '' then Exit;
 
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1597,8 +1598,10 @@ end;
 
 procedure e_TextureFontGetSize(ID: DWORD; var CharWidth, CharHeight: Byte);
 begin
- CharWidth := e_TextureFonts[ID].CharWidth;
- CharHeight := e_TextureFonts[ID].CharHeight;
+  if Integer(ID) > High(e_TextureFonts) then
+    Exit;
+  CharWidth := e_TextureFonts[ID].CharWidth;
+  CharHeight := e_TextureFonts[ID].CharHeight;
 end;
 
 procedure e_RemoveAllTextureFont();
