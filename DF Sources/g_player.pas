@@ -166,6 +166,7 @@ type
     function    StayOnStep(XInc, YInc: Integer): Boolean;
     function    HeadInLiquid(XInc, YInc: Integer): Boolean;
     function    BodyInLiquid(XInc, YInc: Integer): Boolean;
+    function    BodyInAcid(XInc, YInc: Integer): Boolean;
     function    FullInLift(XInc, YInc: Integer): Integer;
     {procedure   CollideItem();}
     procedure   FlySmoke(Times: DWORD = 1);
@@ -3133,6 +3134,12 @@ function TPlayer.BodyInLiquid(XInc, YInc: Integer): Boolean;
 begin
   Result := g_Map_CollidePanel(FObj.X+PLAYER_RECT.X+XInc, FObj.Y+PLAYER_RECT.Y+YInc, PLAYER_RECT.Width,
                                PLAYER_RECT.Height-20, PANEL_WATER or PANEL_ACID1 or PANEL_ACID2, False);
+end;
+
+function TPlayer.BodyInAcid(XInc, YInc: Integer): Boolean;
+begin
+  Result := g_Map_CollidePanel(FObj.X+PLAYER_RECT.X+XInc, FObj.Y+PLAYER_RECT.Y+YInc, PLAYER_RECT.Width,
+                               PLAYER_RECT.Height-20, PANEL_ACID1 or PANEL_ACID2, False);
 end;
 
 procedure TPlayer.MakeBloodSimple(Count: Word);
@@ -6722,6 +6729,15 @@ begin
         end else
           Turn();
     end;
+
+// Осталось мало воздуха:
+  if FAir < 36 * 2 then
+    Jump(20);
+
+// Выбираемся из кислоты, если нет костюма, обожглись, или мало здоровья:
+  if (FMegaRulez[MR_SUIT] < gTime) and ((FLastHit = HIT_ACID) or (Healthy() <= 1)) then
+    if BodyInAcid(0, 0) then
+      Jump();
 end;
 
 function TBot.FullInStep(XInc, YInc: Integer): Boolean;
