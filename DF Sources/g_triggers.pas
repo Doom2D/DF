@@ -1329,7 +1329,8 @@ begin
               begin
                 if g_GetUIDType(ActivateUID) = UID_PLAYER then
                 begin
-                  if (ActivateUID = gPlayer1.UID) or ((gPlayer2 <> nil) and (ActivateUID = gPlayer2.UID)) then
+                  if ((gPlayer1 <> nil) and (ActivateUID = gPlayer1.UID)) or
+                     ((gPlayer2 <> nil) and (ActivateUID = gPlayer2.UID)) then
                   begin
                     if Data.MessageKind = 0 then
                       g_Console_Add(msg, True)
@@ -1353,7 +1354,8 @@ begin
                 if g_GetUIDType(ActivateUID) = UID_PLAYER then
                 begin
                   p := g_Player_Get(ActivateUID);
-                  if (p.Team = gPlayer1.Team) or ((gPlayer2 <> nil) and (p.Team = gPlayer2.Team)) then
+                  if ((gPlayer1 <> nil) and (p.Team = gPlayer1.Team)) or
+                     ((gPlayer2 <> nil) and (p.Team = gPlayer2.Team)) then
                     if Data.MessageKind = 0 then
                       g_Console_Add(msg, True)
                     else if Data.MessageKind = 1 then
@@ -1376,7 +1378,8 @@ begin
                 if g_GetUIDType(ActivateUID) = UID_PLAYER then
                 begin
                   p := g_Player_Get(ActivateUID);
-                  if (p.Team <> gPlayer1.Team) or ((gPlayer2 <> nil) and (p.Team <> gPlayer2.Team)) then
+                  if ((gPlayer1 <> nil) and (p.Team <> gPlayer1.Team)) or
+                     ((gPlayer2 <> nil) and (p.Team <> gPlayer2.Team)) then
                     if Data.MessageKind = 0 then
                       g_Console_Add(msg, True)
                     else if Data.MessageKind = 1 then
@@ -1396,7 +1399,8 @@ begin
 
             3: // red team
               begin
-                if (TEAM_RED = gPlayer1.Team) or ((gPlayer2 <> nil) and (TEAM_RED = gPlayer2.Team)) then
+                if ((gPlayer1 <> nil) and (TEAM_RED = gPlayer1.Team)) or
+                   ((gPlayer2 <> nil) and (TEAM_RED = gPlayer2.Team)) then
                   if Data.MessageKind = 0 then
                     g_Console_Add(msg, True)
                   else if Data.MessageKind = 1 then
@@ -1415,7 +1419,8 @@ begin
 
             4: // blue team
               begin
-                if (TEAM_BLUE = gPlayer1.Team) or ((gPlayer2 <> nil) and (TEAM_BLUE = gPlayer2.Team)) then
+                if ((gPlayer1 <> nil) and (TEAM_BLUE = gPlayer1.Team)) or
+                   ((gPlayer2 <> nil) and (TEAM_BLUE = gPlayer2.Team)) then
                   if Data.MessageKind = 0 then
                     g_Console_Add(msg, True)
                   else if Data.MessageKind = 1 then
