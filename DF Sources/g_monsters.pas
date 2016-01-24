@@ -2039,7 +2039,7 @@ begin
      (FObj.X > gMapInfo.Width+1000) or (FObj.Y < -1000) then
   begin
     FRemoved := True;
-    if gLMSRespawn = LMS_RESPAWN_NONE then
+    if Live and (gLMSRespawn = LMS_RESPAWN_NONE) then
     begin
       Inc(gCoopMonstersKilled);
       if g_Game_IsNet then
