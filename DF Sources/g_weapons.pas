@@ -607,6 +607,22 @@ var
 begin
   Result := 0;
 
+  if t = HIT_SOME then
+  begin
+    h := High(gCorpses);
+
+    if gAdvCorpses and (h <> -1) then
+      for i := 0 to h do
+        if (gCorpses[i] <> nil) and (gCorpses[i].State <> CORPSE_STATE_REMOVEME) and
+           g_Obj_Collide(obj, @gCorpses[i].Obj) then
+        begin
+          // Распиливаем труп:
+          gCorpses[i].Damage(d, (obj^.Vel.X+obj^.Accel.X) div 4,
+                                (obj^.Vel.Y+obj^.Accel.Y) div 4);
+          Result := 1;
+        end;
+  end;
+
   h := High(gPlayers);
 
   if h <> -1 then
@@ -618,10 +634,8 @@ begin
                            (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
           if t = HIT_BFG then g_Monsters_goodsnd();
           Result := 1;
-          // TODO: Exit?
+          Exit;
         end;
-
-  if Result <> 0 then Exit;
 
   h := High(gMonsters);
 

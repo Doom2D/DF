@@ -5560,12 +5560,17 @@ begin
         g_Player_CreateGibs(FObj.X+FObj.Rect.X+(FObj.Rect.Width div 2),
                             FObj.Y+FObj.Rect.Y+(FObj.Rect.Height div 2),
                             FModelName, FColor);
+        g_Sound_PlayExAt('SOUND_MONSTER_SLOP', FObj.X, FObj.Y);
       end;
     end
   else
     begin
       FObj.Vel.X := FObj.Vel.X + vx;
       FObj.Vel.Y := FObj.Vel.Y + vy;
+      g_GFX_Blood(FObj.X+PLAYER_CORPSERECT.X+(PLAYER_CORPSERECT.Width div 2),
+                  FObj.Y+PLAYER_CORPSERECT.Y+(PLAYER_CORPSERECT.Height div 2),
+                  Value, vx, vy, 16, (PLAYER_CORPSERECT.Height*2) div 3,
+                  150, 0, 0);
     end;
 end;
 
