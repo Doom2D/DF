@@ -5887,7 +5887,9 @@ begin
         end
       else
         Inc(NextMsg);
-    end;
+    end else
+      if NextMsg = 0 then
+        Inc(NextMsg);
 
     Msgs[NextMsg-1] := Text;
     CurValue := 0;
