@@ -1987,7 +1987,7 @@ begin
     end;
 
     AddSpace();
-    AddButton(@ProcConnectNetGame, _lc[I_MENU_START_GAME]);
+    AddButton(@ProcConnectNetGame, _lc[I_MENU_CLIENT_CONNECT]);
 
     ReAlign();
   end;
