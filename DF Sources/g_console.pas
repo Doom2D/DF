@@ -390,6 +390,10 @@ begin
   AddCommand('net_interp', GameCVars);
   AddCommand('net_forceplayerupdate', GameCVars);
   AddCommand('net_predictself', GameCVars);
+  AddCommand('sv_name', GameCVars);
+  AddCommand('sv_passwd', GameCVars);
+  AddCommand('sv_maxplrs', GameCVars);
+  AddCommand('sv_public', GameCVars);
   AddCommand('sv_intertime', GameCVars);
 
   AddCommand('quit', GameCommands);

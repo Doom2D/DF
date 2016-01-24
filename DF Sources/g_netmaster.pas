@@ -22,7 +22,7 @@ type
     IP: string;
     Port: Word;
     Map: string;
-    Players, MaxPlayers, Bots: Byte;
+    Players, MaxPlayers, LocalPl, Bots: Byte;
     Ping: Integer;
     GameMode: Byte;
     Password: Boolean;
@@ -191,6 +191,8 @@ begin
       begin
         with SL[I] do
         begin
+          Ping := e_Buffer_Read_LongInt(@NetIn);
+          Ping := GetCurrentTime() - Ping;
           Name := e_Buffer_Read_String(@NetIn);
           Map := e_Buffer_Read_String(@NetIn);
           GameMode := e_Buffer_Read_Byte(@NetIn);
@@ -198,9 +200,8 @@ begin
           MaxPlayers := e_Buffer_Read_Byte(@NetIn);
           Protocol := e_Buffer_Read_Byte(@NetIn);
           Password := e_Buffer_Read_Byte(@NetIn) = 1;
+          LocalPl := e_Buffer_Read_Byte(@NetIn);
           Bots := e_Buffer_Read_Word(@NetIn);
-          Ping := e_Buffer_Read_LongInt(@NetIn);
-          Ping := GetCurrentTime() - Ping;
         end;
         Inc(Cnt);
         break;
@@ -224,10 +225,6 @@ begin
   e_Buffer_Write(@NetOut, gGameSettings.GameMode);
 
   Cli := NetClientCount;
-  if gPlayer1 <> nil then
-    Inc(Cli);
-  if gPlayer2 <> nil then
-    Inc(Cli);
   e_Buffer_Write(@NetOut, Cli);
 
   e_Buffer_Write(@NetOut, NetMaxClients);
@@ -321,7 +318,7 @@ begin
 
   enet_peer_reset(NetMPeer);
   enet_host_destroy(NetMHost);
-  
+
   NetMPeer := nil;
   NetMHost := nil;
 
@@ -331,7 +328,7 @@ end;
 procedure g_Net_Slist_Check;
 begin
   if (NetMHost = nil) or (NetMPeer = nil) then Exit;
-  
+
   while (enet_host_service(NetMHost, @NetMEvent, 0) > 0) do
   begin
     if NetMEvent.kind = ENET_EVENT_TYPE_DISCONNECT then
@@ -418,7 +415,7 @@ begin
   e_DrawLine(1, 16, gScreenHeight-64, gScreenWidth-16, gScreenHeight-64, 255, 127, 0);
 
   e_DrawLine(1, mx - 52, 64, mx - 52, gScreenHeight-44, 255, 127, 0);
-  e_DrawLine(1, mx, 64, mx, gScreenHeight-44, 255, 127, 0);
+  e_DrawLine(1, mx, 64, mx, gScreenHeight-64, 255, 127, 0);
   e_DrawLine(1, mx + 52, 64, mx + 52, gScreenHeight-64, 255, 127, 0);
   e_DrawLine(1, mx + 104, 64, mx + 104, gScreenHeight-64, 255, 127, 0);
 
@@ -459,8 +456,7 @@ begin
   for I := 0 to High(SL) do
   begin
     e_TextureFontPrintEx(mx + 54, y, IntToStr(SL[I].Players) + '/' + IntToStr(SL[I].MaxPlayers), gStdFont, 255, 255, 255, 1);
-    if SL[I].Bots > 0 then
-      e_TextureFontPrintEx(mx + 54, y + 16, IntToStr(SL[I].Bots), gStdFont, 210, 210, 210, 1);
+    e_TextureFontPrintEx(mx + 54, y + 16, IntToStr(SL[I].LocalPl) + '+' + IntToStr(SL[I].Bots), gStdFont, 210, 210, 210, 1);
     y := y + 42;
   end;
 
@@ -475,7 +471,7 @@ begin
 
   e_TextureFontPrintEx(20, gScreenHeight-61, ip, gStdFont, 205, 205, 205, 1);
   ip := IntToStr(Length(SL)) + _lc[I_NET_SLIST_SERVERS];
-  e_TextureFontPrintEx(gScreenWidth - 16 - (Length(ip) + 1)*cw,
+  e_TextureFontPrintEx(gScreenWidth - 40 - (Length(ip) + 1)*cw,
     gScreenHeight-61, ip, gStdFont, 205, 205, 205, 1);
 end;
 

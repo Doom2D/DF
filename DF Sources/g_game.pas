@@ -4026,7 +4026,7 @@ procedure GameCVars(P: SArray);
 var
   a, b: Integer;
   stat: TPlayerStatArray;
-  cmd: string;
+  cmd, s: string;
   config: TConfig;
 begin
   stat := nil;
@@ -4245,6 +4245,79 @@ begin
     config.WriteBool('Client', 'PredictSelf', NetPredictSelf);
     config.SaveFile(GameDir+'\'+CONFIG_FILENAME);
     config.Free();
+  end
+  else if cmd = 'sv_name' then
+  begin
+    if (Length(P) > 1) and (Length(P[1]) > 0) then
+    begin
+      NetServerName := P[1];
+      if Length(NetServerName) > 64 then
+        SetLength(NetServerName, 64);
+      if g_Game_IsServer and g_Game_IsNet and NetUseMaster then
+        g_Net_Slist_Update;
+    end;
+
+    g_Console_Add(cmd + ' = "' + NetServerName + '"');
+  end
+  else if cmd = 'sv_passwd' then
+  begin
+    if (Length(P) > 1) and (Length(P[1]) > 0) then
+    begin
+      NetPassword := P[1];
+      if Length(NetPassword) > 24 then
+        SetLength(NetPassword, 24);
+      if g_Game_IsServer and g_Game_IsNet and NetUseMaster then
+        g_Net_Slist_Update;
+    end;
+
+    g_Console_Add(cmd + ' = "' + AnsiLowerCase(NetPassword) + '"');
+  end
+  else if cmd = 'sv_maxplrs' then
+  begin
+    if (Length(P) > 1) then
+    begin
+      NetMaxClients := Min(Max(StrToIntDef(P[1], NetMaxClients), 1), NET_MAXCLIENTS);
+      if g_Game_IsServer and g_Game_IsNet then
+      begin
+        b := 0;
+        for a := 0 to High(NetClients) do
+          if NetClients[a].Used then
+          begin
+            Inc(b);
+            if b > NetMaxClients then
+            begin
+              s := g_Player_Get(NetClients[a].Player).Name;
+              enet_peer_disconnect(NetClients[a].Peer, NET_DISC_FULL);
+              g_Console_Add(Format(_lc[I_PLAYER_KICK], [s]));
+              MH_SEND_GameEvent(NET_EV_PLAYER_KICK, 0, s);
+            end;
+          end;
+        if NetUseMaster then
+          g_Net_Slist_Update;
+      end;
+    end;
+
+    g_Console_Add(cmd + ' = ' + IntToStr(NetMaxClients));
+  end
+  else if cmd = 'sv_public' then
+  begin
+    if (Length(P) > 1) then
+    begin
+      NetUseMaster := StrToIntDef(P[1], Byte(NetUseMaster)) > 0;
+      if g_Game_IsServer and g_Game_IsNet then
+        if NetUseMaster then
+        begin
+          if NetMPeer = nil then
+            if not g_Net_Slist_Connect() then
+              g_Console_Add(_lc[I_NET_MSG_ERROR] + _lc[I_NET_SLIST_ERROR]);
+          g_Net_Slist_Update();
+        end
+        else
+          if NetMPeer <> nil then
+            g_Net_Slist_Disconnect();
+    end;
+
+    g_Console_Add(cmd + ' = ' + IntToStr(Byte(NetUseMaster)));
   end
   else if cmd = 'sv_intertime' then
   begin

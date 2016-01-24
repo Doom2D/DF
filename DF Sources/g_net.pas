@@ -6,7 +6,7 @@ uses
   e_log, e_fixedbuffer, ENet, ENet_Types, ENet_Win32, Classes;
 
 const
-  NET_PROTOCOL_VER = 157;
+  NET_PROTOCOL_VER = 158;
 
   NET_MAXCLIENTS = 24;
   NET_CHANS = 11;
@@ -171,18 +171,26 @@ function g_Net_FindSlot(): Integer;
 var
   I: Integer;
   F: Boolean;
-  N: Integer;
+  N, C: Integer;
 begin
   N := -1;
   F := False;
+  C := 0;
   for I := Low(NetClients) to High(NetClients) do
   begin
-    if not NetClients[I].Used then
-    begin
-      F := True;
-      N := I;
-      Break;
-    end;
+    if NetClients[I].Used then
+      Inc(C)
+    else
+      if not F then
+      begin
+        F := True;
+        N := I;
+      end;
+  end;
+  if C >= NetMaxClients then
+  begin
+    Result := -1;
+    Exit;
   end;
 
   if not F then
@@ -417,6 +425,7 @@ var
   Buf: ENetBuffer;
   Len, ClTime: Integer;
   Ping: array [0..5] of Byte;
+  NPl: Byte;
 begin
   if NetPongSock = ENET_SOCKET_NULL then Exit;
 
@@ -435,9 +444,13 @@ begin
     e_Buffer_Clear(@NetOut);
     e_Buffer_Write(@NetOut, Byte(Ord('D')));
     e_Buffer_Write(@NetOut, Byte(Ord('F')));
-    g_Net_Slist_WriteInfo();
-    e_Buffer_Write(@NetOut, gNumBots);
     e_Buffer_Write(@NetOut, ClTime);
+    g_Net_Slist_WriteInfo();
+    NPl := 0;
+    if gPlayer1 <> nil then Inc(NPl);
+    if gPlayer2 <> nil then Inc(NPl);
+    e_Buffer_Write(@NetOut, NPl);
+    e_Buffer_Write(@NetOut, gNumBots);
 
     Buf.data := Addr(NetOut.Data[0]);
     Buf.dataLength := NetOut.WritePos;
