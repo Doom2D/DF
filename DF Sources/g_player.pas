@@ -4150,6 +4150,8 @@ begin
 end;
 
 procedure TPlayer.Run(Direction: TDirection);
+var
+  a, b: Integer;
 begin
   if MAX_RUNVEL > 8 then
     FlySmoke();
@@ -4163,6 +4165,22 @@ begin
   else
     if FObj.Vel.X < MAX_RUNVEL then
       FObj.Vel.X := FObj.Vel.X + (MAX_RUNVEL shr 3);
+
+// Возможно, пинаем куски:
+  if (FObj.Vel.X <> 0) and (gGibs <> nil) then
+  begin
+    b := Abs(FObj.Vel.X);
+    if b > 1 then b := b * (Random(8 div b) + 1);
+    for a := 0 to High(gGibs) do
+      if gGibs[a].Live and
+         g_Obj_Collide(FObj.X+FObj.Rect.X, FObj.Y+FObj.Rect.Y+FObj.Rect.Height-4,
+                       FObj.Rect.Width, 8, @gGibs[a].Obj) and (Random(3) = 0) then
+        // Пинаем куски
+        if FObj.Vel.X < 0 then
+          g_Obj_PushA(@gGibs[a].Obj, b, Random(61)+120) // налево
+        else
+          g_Obj_PushA(@gGibs[a].Obj, b, Random(61));    // направо
+  end;
 
   SetAction(A_WALK);
 end;
