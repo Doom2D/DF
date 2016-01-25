@@ -604,6 +604,56 @@ end;
 function g_Weapon_Hit(obj: PObj; d: Integer; SpawnerUID: Word; t: Byte): Byte;
 var
   i, h: Integer;
+
+  function PlayerHit(Team: Byte = 0): Boolean;
+  var
+    i: Integer;
+    ChkTeam: Boolean;
+    p: TPlayer;
+  begin
+    Result := False;
+    h := High(gPlayers);
+
+    if h <> -1 then
+      for i := 0 to h do
+        if (gPlayers[i] <> nil) and gPlayers[i].Live and g_Obj_Collide(obj, @gPlayers[i].Obj) then
+        begin
+          ChkTeam := True;
+          if (Team > 0) and (g_GetUIDType(SpawnerUID) = UID_PLAYER) then
+          begin
+            p := g_Player_Get(SpawnerUID);
+            if p <> nil then
+              ChkTeam := (p.Team = gPlayers[i].Team) xor (Team = 2);
+          end;
+          if ChkTeam then
+            if HitPlayer(gPlayers[i], d, obj^.Vel.X, obj^.Vel.Y, SpawnerUID, t) then
+            begin
+              gPlayers[i].Push((obj^.Vel.X+obj^.Accel.X)*IfThen(t = HIT_BFG, 8, 1) div 4,
+                               (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
+              if t = HIT_BFG then g_Monsters_goodsnd();
+              Result := True;
+              break;
+            end;
+        end;
+  end;
+  function MonsterHit(): Boolean;
+  var
+    i: Integer;
+  begin
+    Result := False;
+    h := High(gMonsters);
+
+    if h <> -1 then
+      for i := 0 to h do
+        if (gMonsters[i] <> nil) and gMonsters[i].Live and g_Obj_Collide(obj, @gMonsters[i].Obj) then
+          if HitMonster(gMonsters[i], d, obj^.Vel.X, obj^.Vel.Y, SpawnerUID, t) then
+          begin
+            gMonsters[i].Push((obj^.Vel.X+obj^.Accel.X)*IfThen(t = HIT_BFG, 8, 1) div 4,
+                              (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
+            Result := True;
+            break;
+          end;
+  end;
 begin
   Result := 0;
 
@@ -623,32 +673,67 @@ begin
         end;
   end;
 
-  h := High(gPlayers);
+  case gGameSettings.GameMode of
+    // Кампания:
+    GM_COOP, GM_SINGLE:
+    begin
+      // Сначала бьём монстров, если есть, потом пытаемся бить игроков
+      if MonsterHit() then
+      begin
+        Result := 2;
+        Exit;
+      end;
 
-  if h <> -1 then
-    for i := 0 to h do
-      if (gPlayers[i] <> nil) and gPlayers[i].Live and g_Obj_Collide(obj, @gPlayers[i].Obj) then
-        if HitPlayer(gPlayers[i], d, obj^.Vel.X, obj^.Vel.Y, SpawnerUID, t) then
-        begin
-          gPlayers[i].Push((obj^.Vel.X+obj^.Accel.X)*IfThen(t = HIT_BFG, 8, 1) div 4,
-                           (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
-          if t = HIT_BFG then g_Monsters_goodsnd();
-          Result := 1;
-          Exit;
-        end;
+      if PlayerHit() then
+      begin
+        Result := 1;
+        Exit;
+      end;
+    end;
 
-  h := High(gMonsters);
+    // Дезматч:
+    GM_DM:
+    begin
+      // Сначала бьём игроков, если есть, потом пытаемся бить монстров
+      if PlayerHit() then
+      begin
+        Result := 1;
+        Exit;
+      end;
 
-  if h <> -1 then
-    for i := 0 to h do
-      if (gMonsters[i] <> nil) and gMonsters[i].Live and g_Obj_Collide(obj, @gMonsters[i].Obj) then
-        if HitMonster(gMonsters[i], d, obj^.Vel.X, obj^.Vel.Y, SpawnerUID, t) then
-        begin
-          gMonsters[i].Push((obj^.Vel.X+obj^.Accel.X)*IfThen(t = HIT_BFG, 8, 1) div 4,
-                            (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
-          Result := 2;
-          Exit;
-        end;
+      if MonsterHit() then
+      begin
+        Result := 2;
+        Exit;
+      end;
+    end;
+
+    // Командные:
+    GM_TDM, GM_CTF:
+    begin
+      // Сначала бьём игроков команды соперника
+      if PlayerHit(2) then
+      begin
+        Result := 1;
+        Exit;
+      end;
+
+      // Потом монстров
+      if MonsterHit() then
+      begin
+        Result := 2;
+        Exit;
+      end;
+
+      // И в конце своих игроков
+      if PlayerHit(1) then
+      begin
+        Result := 1;
+        Exit;
+      end;
+    end;
+
+  end;
 end;
 
 function g_Weapon_HitUID(UID: Word; d: Integer; SpawnerUID: Word; t: Byte): Boolean;
