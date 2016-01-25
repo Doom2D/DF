@@ -232,6 +232,9 @@ type
     I_MENU_SOUND_INACTIVE_SOUNDS,     
     I_MENU_SOUND_INACTIVE_SOUNDS_ON,  
     I_MENU_SOUND_INACTIVE_SOUNDS_OFF,
+    I_MENU_SOUND_EFFECTS,
+    I_MENU_DF,
+    I_MENU_DOOM2,
 
     I_MENU_PLAYER_NAME,
     I_MENU_PLAYER_TEAM,               
@@ -998,6 +1001,10 @@ const
                                        'Звуки есть'),
     ('MENU SOUND INACTIVE SOUNDS OFF', 'Mute sounds',
                                        'Звуков нет'),
+    ('MENU SOUND EFFECTS',             'Sound effects',
+                                       'Звуковые эффекты:'),
+    ('MENU DF',                        'DF','DF'),
+    ('MENU DOOM2',                     'Doom 2', 'Doom 2'),
 
     ('MENU PLAYER NAME',               'Name:',
                                        'Имя:'),

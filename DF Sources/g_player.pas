@@ -121,6 +121,7 @@ type
     FArmor:     Integer;
     FAir:       Integer;
     FPain:      Integer;
+    FPickup:    Integer;
     FKills:     Integer;
     FMonsterKills: Integer;
     FFrags:     Integer;
@@ -191,6 +192,7 @@ type
     FMaxAmmo:   Array [A_BULLETS..A_CELLS] of Word;
     FWeapon:    Array [WEAPON_KASTET..WEAPON_SUPERPULEMET] of Boolean;
     FRulez:     Set of R_ITEM_BACKPACK..R_BERSERK;
+    FBerserk:   Integer;
     FMegaRulez: Array [MR_SUIT..MR_MAX] of DWORD;
     FReloading: Array [WEAPON_KASTET..WEAPON_SUPERPULEMET] of Word;
     FTime:      Array [T_RESPAWN..T_USE] of DWORD;
@@ -246,6 +248,7 @@ type
     procedure   SoftReset();
     procedure   Draw(); virtual;
     procedure   DrawPain();
+    procedure   DrawPickup();
     procedure   DrawRulez();
     procedure   DrawAim();
     procedure   DrawBubble();
@@ -1958,6 +1961,7 @@ begin
     FMegaRulez[MR_SUIT] := 0;
     FMegaRulez[MR_INVUL] := 0;
     FMegaRulez[MR_INVIS] := 0;
+    FBerserk := 0;
   end;
 
 // Но от остального спасает:
@@ -2002,7 +2006,7 @@ begin
       Inc(FDamageBuffer, value);
 
   // Вспышка боли:
-    if gFlash then
+    if gFlash <> 0 then
       FPain := FPain + value;
   end;
 
@@ -2468,6 +2472,13 @@ begin
       e_DrawFillQuad(0, 0, gPlayerScreenSize.X-1, gPlayerScreenSize.Y-1,
                      0, 96, 0, 200, B_NONE);
   end;
+
+  // При взятии берсерка рисуется красноватый фон
+  if (FBerserk >= 0) and (LongWord(FBerserk) >= gTime) and (gFlash = 2) then
+  begin
+    e_DrawFillQuad(0, 0, gPlayerScreenSize.X-1, gPlayerScreenSize.Y-1,
+                     255, 0, 0, 200, B_NONE);
+  end;
 end;
 
 procedure TPlayer.DrawPain();
@@ -2489,6 +2500,23 @@ begin
 
   e_DrawFillQuad(0, 0, gPlayerScreenSize.X-1, gPlayerScreenSize.Y-1, 255, 0, 0, 255-h*50);
   //e_DrawFillQuad(0, 0, gPlayerScreenSize.X-1, gPlayerScreenSize.Y-1, 255-min(128, a), 255-a, 255-a, 0, B_FILTER);
+end;
+
+procedure TPlayer.DrawPickup();
+var
+  a, h: Integer;
+begin
+  if FPickup = 0 then Exit;
+
+  a := FPickup;
+
+  if a < 15 then h := 1
+  else if a < 35 then h := 2
+  else if a < 55 then h := 3
+  else if a < 75 then h := 4
+  else h := 5;
+
+  e_DrawFillQuad(0, 0, gPlayerScreenSize.X-1, gPlayerScreenSize.Y-1, 150, 200, 150, 255-h*50);
 end;
 
 procedure TPlayer.Fire();
@@ -2539,7 +2567,7 @@ begin
         else
           g_Sound_PlayExAt('SOUND_WEAPON_MISSBERSERK', FObj.X, FObj.Y);
 
-        if gFlash then
+        if gFlash = 1 then
           if FPain < 50 then
             FPain := min(FPain + 25, 50);
       end else g_Weapon_punch(FObj.X+FObj.Rect.X, FObj.Y+FObj.Rect.Y, 3, FUID);
@@ -2585,6 +2613,7 @@ begin
       if FAmmo[A_SHELLS] > 0 then
       begin
         g_Weapon_shotgun(wx, wy, xd, yd, FUID);
+        if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRESHOTGUN', wx, wy);
         FReloading[FCurrWeap] := WEAPON_RELOAD[FCurrWeap];
         Dec(FAmmo[A_SHELLS]);
         FFireAngle := FAngle;
@@ -2611,6 +2640,7 @@ begin
       if FAmmo[A_BULLETS] > 0 then
       begin
         g_Weapon_mgun(wx, wy, xd, yd, FUID);
+        if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIREPISTOL', wx, wy);
         FReloading[FCurrWeap] := WEAPON_RELOAD[FCurrWeap];
         Dec(FAmmo[A_BULLETS]);
         FFireAngle := FAngle;
@@ -2656,6 +2686,7 @@ begin
       if FAmmo[A_SHELLS] > 0 then
       begin
         g_Weapon_shotgun(wx, wy, xd, yd, FUID);
+        if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRECGUN', wx, wy);
         FReloading[FCurrWeap] := WEAPON_RELOAD[FCurrWeap];
         Dec(FAmmo[A_SHELLS]);
         FFireAngle := FAngle;
@@ -3273,6 +3304,7 @@ begin
         IncMax(FHealth, 10, PLAYER_HP_SOFT);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_MEDKIT_LARGE:
@@ -3281,6 +3313,7 @@ begin
         IncMax(FHealth, 25, PLAYER_HP_SOFT);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_ARMOR_GREEN:
@@ -3289,6 +3322,7 @@ begin
         FArmor := PLAYER_AP_SOFT;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_ARMOR_BLUE:
@@ -3297,6 +3331,7 @@ begin
         FArmor := PLAYER_AP_LIMIT;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_SPHERE_BLUE:
@@ -3305,6 +3340,7 @@ begin
         IncMax(FHealth, 100, PLAYER_HP_LIMIT);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_SPHERE_WHITE:
@@ -3316,6 +3352,7 @@ begin
           FArmor := PLAYER_AP_LIMIT;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_WEAPON_SAW:
@@ -3323,6 +3360,7 @@ begin
       begin
         FWeapon[WEAPON_SAW] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3335,6 +3373,7 @@ begin
         IncMax(FAmmo[A_SHELLS], 4, FMaxAmmo[A_SHELLS]);
         FWeapon[WEAPON_SHOTGUN1] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3346,6 +3385,7 @@ begin
         IncMax(FAmmo[A_SHELLS], 4, FMaxAmmo[A_SHELLS]);
         FWeapon[WEAPON_SHOTGUN2] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3357,6 +3397,7 @@ begin
         IncMax(FAmmo[A_BULLETS], 50, FMaxAmmo[A_BULLETS]);
         FWeapon[WEAPON_CHAINGUN] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3368,6 +3409,7 @@ begin
         IncMax(FAmmo[A_ROCKETS], 2, FMaxAmmo[A_ROCKETS]);
         FWeapon[WEAPON_ROCKETLAUNCHER] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3379,6 +3421,7 @@ begin
         IncMax(FAmmo[A_CELLS], 40, FMaxAmmo[A_CELLS]);
         FWeapon[WEAPON_PLASMA] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3390,6 +3433,7 @@ begin
         IncMax(FAmmo[A_CELLS], 40, FMaxAmmo[A_CELLS]);
         FWeapon[WEAPON_BFG] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3401,6 +3445,7 @@ begin
         IncMax(FAmmo[A_SHELLS], 4, FMaxAmmo[A_SHELLS]);
         FWeapon[WEAPON_SUPERPULEMET] := True;
         Result := True;
+        if gFlash = 2 then Inc(FPickup, 5);
         if a and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETWEAPON');
       end;
 
@@ -3410,6 +3455,7 @@ begin
         IncMax(FAmmo[A_BULLETS], 10, FMaxAmmo[A_BULLETS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_BULLETS_BOX:
@@ -3418,6 +3464,7 @@ begin
         IncMax(FAmmo[A_BULLETS], 50, FMaxAmmo[A_BULLETS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_SHELLS:
@@ -3426,6 +3473,7 @@ begin
         IncMax(FAmmo[A_SHELLS], 4, FMaxAmmo[A_SHELLS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_SHELLS_BOX:
@@ -3434,6 +3482,7 @@ begin
         IncMax(FAmmo[A_SHELLS], 25, FMaxAmmo[A_SHELLS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_ROCKET:
@@ -3442,6 +3491,7 @@ begin
         IncMax(FAmmo[A_ROCKETS], 1, FMaxAmmo[A_ROCKETS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_ROCKET_BOX:
@@ -3450,6 +3500,7 @@ begin
         IncMax(FAmmo[A_ROCKETS], 5, FMaxAmmo[A_ROCKETS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_CELL:
@@ -3458,6 +3509,7 @@ begin
         IncMax(FAmmo[A_CELLS], 40, FMaxAmmo[A_CELLS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_CELL_BIG:
@@ -3466,6 +3518,7 @@ begin
         IncMax(FAmmo[A_CELLS], 100, FMaxAmmo[A_CELLS]);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_AMMO_BACKPACK:
@@ -3492,6 +3545,7 @@ begin
         FRulez := FRulez + [R_ITEM_BACKPACK];
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_KEY_RED:
@@ -3500,6 +3554,7 @@ begin
         Include(FRulez, R_KEY_RED);
         Result := True;
         remove := (gGameSettings.GameMode <> GM_COOP) and (g_Player_GetCount() < 2);
+        if gFlash = 2 then Inc(FPickup, 5);
         if (not remove) and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETITEM');
       end;
 
@@ -3509,6 +3564,7 @@ begin
         Include(FRulez, R_KEY_GREEN);
         Result := True;
         remove := (gGameSettings.GameMode <> GM_COOP) and (g_Player_GetCount() < 2);
+        if gFlash = 2 then Inc(FPickup, 5);
         if (not remove) and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETITEM');
       end;
 
@@ -3518,6 +3574,7 @@ begin
         Include(FRulez, R_KEY_BLUE);
         Result := True;
         remove := (gGameSettings.GameMode <> GM_COOP) and (g_Player_GetCount() < 2);
+        if gFlash = 2 then Inc(FPickup, 5);
         if (not remove) and g_Game_IsNet then MH_SEND_Sound(GameX, GameY, 'SOUND_ITEM_GETITEM');
       end;
 
@@ -3527,6 +3584,7 @@ begin
         FMegaRulez[MR_SUIT] := gTime+PLAYER_SUIT_TIME;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_OXYGEN:
@@ -3535,6 +3593,7 @@ begin
         FAir := AIR_MAX;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_MEDKIT_BLACK:
@@ -3547,14 +3606,17 @@ begin
             FCurrWeap := WEAPON_KASTET;
             FModel.SetWeapon(WEAPON_KASTET);
           end;
-          if gFlash then
+          if gFlash <> 0 then
             Inc(FPain, 100);
+            if gFlash = 2 then Inc(FPickup, 5);
+          FBerserk := gTime+30000;
           Result := True;
           remove := True;
         end;
         if FHealth < PLAYER_HP_SOFT then
         begin
           FHealth := PLAYER_HP_SOFT;
+          FBerserk := gTime+30000;
           Result := True;
           remove := True;
         end;
@@ -3566,6 +3628,7 @@ begin
         FMegaRulez[MR_INVUL] := gTime+PLAYER_INVUL_TIME;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_BOTTLE:
@@ -3574,6 +3637,7 @@ begin
         IncMax(FHealth, 4, PLAYER_HP_LIMIT);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_HELMET:
@@ -3582,6 +3646,7 @@ begin
         IncMax(FArmor, 5, PLAYER_AP_LIMIT);
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_JETPACK:
@@ -3590,6 +3655,7 @@ begin
         FJetFuel := JET_MAX;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
 
     ITEM_INVIS:
@@ -3598,6 +3664,7 @@ begin
         FMegaRulez[MR_INVIS] := gTime+PLAYER_INVIS_TIME;
         Result := True;
         remove := True;
+        if gFlash = 2 then Inc(FPickup, 5);
       end;
   end;
 end;
@@ -4552,6 +4619,7 @@ begin
 
   if (FLastHit = HIT_TRAP) and (FPain > 90) then FPain := 90;
   DecMin(FPain, 5, 0);
+  DecMin(FPickup, 1, 0);
 
   if FLive and (FObj.Y > gMapInfo.Height+128) and AnyServer then
   begin
@@ -4821,7 +4889,7 @@ begin
         else
           g_Sound_PlayExAt('SOUND_WEAPON_MISSBERSERK', FObj.X, FObj.Y);
 
-        if gFlash then
+        if gFlash = 1 then
           if FPain < 50 then
             FPain := min(FPain + 25, 50);
       end else
@@ -5455,12 +5523,14 @@ begin
             FCurrWeap := WEAPON_KASTET;
             FModel.SetWeapon(WEAPON_KASTET);
           end;
-          if gFlash then
+          if gFlash <> 0 then
             Inc(FPain, 100);
+          FBerserk := gTime+30000;
         end;
         if FHealth < PLAYER_HP_SOFT then
         begin
           FHealth := PLAYER_HP_SOFT;
+          FBerserk := gTime+30000;
         end;
       end;
 

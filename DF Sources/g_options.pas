@@ -62,7 +62,7 @@ var
   gAdvGibs: Boolean           = True;
   gGibsCount: Integer         = 32;
   gBloodCount: Byte           = 3;
-  gFlash: Boolean             = True;
+  gFlash: Byte                = 1;
   gDrawBackGround: Boolean    = True;
   gShowMessages: Boolean      = True;
   gRevertPlayers: Boolean     = False;
@@ -112,7 +112,7 @@ begin
   gAdvBlood := True;
   gAdvCorpses := True;
   gAdvGibs := True;
-  gFlash := True;
+  gFlash := 1;
   gDrawBackGround := True;
   gShowMessages := True;
   gRevertPlayers := False;
@@ -227,6 +227,7 @@ begin
   gMusicLevel := Min(config.ReadInt('Sound', 'MusicLevel', 65), 255);
   gMaxSimSounds := Max(Min(config.ReadInt('Sound', 'MaxSimSounds', 8), 66), 2);
   gMuteWhenInactive := config.ReadBool('Sound', 'MuteInactive', False);
+  gSoundEffectsDF := config.ReadBool('Sound', 'SoundEffectsDF', True);
 
   with gGameControls.GameControls do
   begin
@@ -304,7 +305,7 @@ begin
   gAdvBlood := config.ReadBool('Game', 'AdvancesBlood', True);
   gAdvCorpses := config.ReadBool('Game', 'AdvancesCorpses', True);
   gAdvGibs := config.ReadBool('Game', 'AdvancesGibs', True);
-  gFlash := config.ReadBool('Game', 'Flash', True);
+  gFlash := config.ReadInt('Game', 'Flash', 1);
   gDrawBackGround := config.ReadBool('Game', 'BackGround', True);
   gShowMessages := config.ReadBool('Game', 'Messages', True);
   gRevertPlayers := config.ReadBool('Game', 'RevertPlayers', False);
@@ -428,6 +429,7 @@ begin
   config.WriteInt('Sound', 'MusicLevel', gMusicLevel);
   config.WriteInt('Sound', 'MaxSimSounds', gMaxSimSounds);
   config.WriteBool('Sound', 'MuteInactive', gMuteWhenInactive);
+  config.WriteBool('Sound', 'SoundEffectsDF', gSoundEffectsDF);
 
   with config, gGameControls.GameControls do
   begin
@@ -495,7 +497,7 @@ begin
   config.WriteBool('Game', 'AdvancesBlood', gAdvBlood);
   config.WriteBool('Game', 'AdvancesCorpses', gAdvCorpses);
   config.WriteBool('Game', 'AdvancesGibs', gAdvGibs);
-  config.WriteBool('Game', 'Flash', gFlash);
+  config.WriteInt('Game', 'Flash', gFlash);
   config.WriteBool('Game', 'BackGround', gDrawBackGround);
   config.WriteBool('Game', 'Messages', gShowMessages);
   config.WriteBool('Game', 'RevertPlayers', gRevertPlayers);

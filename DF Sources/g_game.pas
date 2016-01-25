@@ -179,6 +179,7 @@ var
   gTime: LongWord;
   gSwitchGameMode: Byte = GM_DM;
   gHearPoint1, gHearPoint2: THearPoint;
+  gSoundEffectsDF: Boolean = False;
   gSoundTriggerTime: Word = 0;
   gDefInterTime: ShortInt = -1;
   gInterEndTime: LongWord = 0;
@@ -2504,6 +2505,7 @@ begin
   glPopMatrix();
 
   p.DrawPain();
+  p.DrawPickup();
   p.DrawRulez();
   if gShowMap then
     DrawMinimap(p, Rect(0, 0, 128, 128));

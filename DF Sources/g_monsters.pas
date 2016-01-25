@@ -2150,7 +2150,7 @@ begin
         if FPain >= MONSTERTABLE[FMonsterType].Pain then
         begin
           FPain := MONSTERTABLE[FMonsterType].Pain;
-          PainSound();
+          if gSoundEffectsDF then PainSound();
         end;
 
       // Снижаем боль со временем:
@@ -2789,6 +2789,7 @@ _end:
                 MONSTER_SERG:
                   begin
                     g_Weapon_shotgun(wx, wy, tx, ty, FUID);
+                    if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRESHOTGUN', wx, wy);
                     FShellTimer := 10;
                     FShellType := SHELL_SHELL;
                   end;
@@ -2809,11 +2810,13 @@ _end:
                 MONSTER_CGUN:
                   begin
                     g_Weapon_mgun(wx, wy, tx, ty, FUID);
+                    if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRECGUN', wx, wy);
                     g_Player_CreateShell(wx, wy, 0, -2, SHELL_BULLET);
                   end;
                 MONSTER_SPIDER:
                   begin
                     g_Weapon_mgun(wx, wy, tx, ty, FUID);
+                    if not gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRECGUN', wx, wy);
                     g_Player_CreateShell(wx, wy, 0, -2, SHELL_SHELL);
                   end;
                 MONSTER_BSP:

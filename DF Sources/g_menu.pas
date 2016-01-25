@@ -61,6 +61,7 @@ begin
 
   gMaxSimSounds := Max(Min(TGUIScroll(menu.GetControl('scMaxSimSounds')).Value*4+2, 66), 2);
   gMuteWhenInactive := TGUISwitch(menu.GetControl('swInactiveSounds')).ItemIndex = 1;
+  gSoundEffectsDF := TGUISwitch(menu.GetControl('swSoundEffects')).ItemIndex = 1;
 
   menu := TGUIMenu(g_GUI_GetWindow('OptionsGameMenu').GetControl('mOptionsGameMenu'));
 
@@ -78,7 +79,7 @@ begin
   end;
 
   gBloodCount := TGUISwitch(menu.GetControl('swBloodCount')).ItemIndex;
-  gFlash := TGUISwitch(menu.GetControl('swScreenFlash')).ItemIndex = 0;
+  gFlash := TGUISwitch(menu.GetControl('swScreenFlash')).ItemIndex;
   gAdvBlood := TGUISwitch(menu.GetControl('swBloodType')).ItemIndex = 1;
   gAdvCorpses := TGUISwitch(menu.GetControl('swCorpseType')).ItemIndex = 1;
   gAdvGibs := TGUISwitch(menu.GetControl('swGibsType')).ItemIndex = 1;
@@ -215,6 +216,12 @@ begin
     else
       ItemIndex := 0;
 
+  with TGUISwitch(menu.GetControl('swSoundEffects')) do
+    if gSoundEffectsDF then
+      ItemIndex := 1
+    else
+      ItemIndex := 0;
+
   menu := TGUIMenu(g_GUI_GetWindow('OptionsControlsP1Menu').GetControl('mOptionsControlsP1Menu'));
 
   with menu, gGameControls.P1Control do
@@ -263,7 +270,7 @@ begin
   TGUISwitch(menu.GetControl('swBloodCount')).ItemIndex := gBloodCount;
 
   with TGUISwitch(menu.GetControl('swScreenFlash')) do
-    if gFlash then ItemIndex := 0 else ItemIndex := 1;
+    ItemIndex := gFlash;
 
   with TGUISwitch(menu.GetControl('swBloodType')) do
     if gAdvBlood then ItemIndex := 1 else ItemIndex := 0;
@@ -2431,6 +2438,13 @@ begin
       AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_ON]);
       AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_OFF]);
     end;
+    // Переключатель звуковых эффектов (DF / Doom 2)
+    with AddSwitch (_lc[I_MENU_SOUND_EFFECTS]) do
+    begin;
+      Name := 'swSoundEffects';
+      AddItem(_lc[I_MENU_DOOM2]);
+      AddItem(_lc[I_MENU_DF]);
+    end;
     ReAlign();
   end;
   Menu.DefControl := 'mOptionsSoundMenu';
@@ -2499,8 +2513,9 @@ begin
     with AddSwitch(_lc[I_MENU_GAME_SCREEN_FLASH]) do
     begin
       Name := 'swScreenFlash';
-      AddItem(_lc[I_MENU_YES]);
       AddItem(_lc[I_MENU_NO]);
+      AddItem(_lc[I_MENU_DF]);
+      AddItem(_lc[I_MENU_DOOM2]);
     end;
     with AddSwitch(_lc[I_MENU_GAME_BACKGROUND]) do
     begin

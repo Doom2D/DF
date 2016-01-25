@@ -442,7 +442,8 @@ begin
           begin
             g_Weapon_mgun(wx, wy, dx, dy, 0, True);
             Projectile := False;
-            snd := 'SOUND_WEAPON_FIRECGUN';
+            if gSoundEffectsDF then snd := 'SOUND_WEAPON_FIRECGUN'
+            else snd := 'SOUND_WEAPON_FIREPISTOL';
             if Data.ShotSound then
             begin
               g_Player_CreateShell(wx, wy, 0, -2, SHELL_BULLET);
