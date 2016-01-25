@@ -2514,6 +2514,7 @@ begin
   glPopMatrix();
 
   p.DrawPain();
+  p.DrawPickup();
   p.DrawRulez();
   if gShowMap then
     DrawMinimap(p, Rect(0, 0, 128, 128));

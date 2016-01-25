@@ -1409,7 +1409,7 @@ procedure g_Weapon_mgun(x, y, xd, yd: Integer; SpawnerUID: Word;
   Silent: Boolean = False);
 begin
   if not Silent then
-    g_Sound_PlayExAt('SOUND_WEAPON_FIRECGUN', x, y);
+    if gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRECGUN', x, y);
 
   g_Weapon_gun(x, y, xd, yd, 1, 3, SpawnerUID, True);
   if (gGameSettings.GameMode in [GM_DM, GM_TDM, GM_CTF]) and
@@ -1426,7 +1426,7 @@ var
   i, j: Integer;
 begin
   if not Silent then
-    g_Sound_PlayExAt('SOUND_WEAPON_FIRESHOTGUN', x, y);
+    if gSoundEffectsDF then g_Sound_PlayExAt('SOUND_WEAPON_FIRESHOTGUN', x, y);
 
   for i := 0 to 9 do
   begin
