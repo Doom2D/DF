@@ -38,7 +38,7 @@ procedure g_Weapon_LoadData();
 procedure g_Weapon_FreeData();
 procedure g_Weapon_Init();
 procedure g_Weapon_Free();
-function g_Weapon_Hit(obj: PObj; d: Integer; SpawnerUID: Word; t: Byte): Byte;
+function g_Weapon_Hit(obj: PObj; d: Integer; SpawnerUID: Word; t: Byte; HitCorpses: Boolean = True): Byte;
 function g_Weapon_HitUID(UID: Word; d: Integer; SpawnerUID: Word; t: Byte): Boolean;
 function g_Weapon_CreateShot(I: Integer; ShotType: Byte; Spawner, TargetUID: Word; X, Y, XV, YV: Integer): LongWord;
 
@@ -383,6 +383,22 @@ var
 begin
   //g_Sound_PlayEx('SOUND_WEAPON_EXPLODEBFG', 255);
 
+  h := High(gCorpses);
+
+  if gAdvCorpses and (h <> -1) then
+    for i := 0 to h do
+      if (gCorpses[i] <> nil) and (gCorpses[i].State <> CORPSE_STATE_REMOVEME) then
+        with gCorpses[i] do
+          if (g_PatchLength(X, Y, Obj.X+Obj.Rect.X+(Obj.Rect.Width div 2),
+                            Obj.Y+Obj.Rect.Y+(Obj.Rect.Height div 2)) <= SHOT_BFG_RADIUS) and
+              g_TraceVector(X, Y, Obj.X+Obj.Rect.X+(Obj.Rect.Width div 2),
+                            Obj.Y+Obj.Rect.Y+(Obj.Rect.Height div 2)) then
+          begin
+            Damage(50, 0, 0);
+            g_Weapon_BFGHit(Obj.X+Obj.Rect.X+(Obj.Rect.Width div 2),
+                            Obj.Y+Obj.Rect.Y+(Obj.Rect.Height div 2));
+          end;
+
   h := High(gPlayers);
 
   if h <> -1 then
@@ -601,7 +617,7 @@ begin
     Shots[i].Timeout := 550 // ~15 sec
 end;
 
-function g_Weapon_Hit(obj: PObj; d: Integer; SpawnerUID: Word; t: Byte): Byte;
+function g_Weapon_Hit(obj: PObj; d: Integer; SpawnerUID: Word; t: Byte; HitCorpses: Boolean = True): Byte;
 var
   i, h: Integer;
 
@@ -657,7 +673,7 @@ var
 begin
   Result := 0;
 
-  if t = HIT_SOME then
+  if HitCorpses then
   begin
     h := High(gCorpses);
 
@@ -1650,7 +1666,7 @@ begin
 
           // Попали в кого-то или в стену:
             if WordBool(st and (MOVE_HITWALL or MOVE_HITLAND or MOVE_HITCEIL)) or
-               (g_Weapon_Hit(@Obj, 10, SpawnerUID, HIT_SOME) <> 0) or
+               (g_Weapon_Hit(@Obj, 10, SpawnerUID, HIT_SOME, False) <> 0) or
                (Timeout < 1) then
             begin
               Obj.Vel.X := 0;
@@ -1717,7 +1733,7 @@ begin
 
           // Попали в кого-то или в стену:
             if WordBool(st and (MOVE_HITWALL or MOVE_HITLAND or MOVE_HITCEIL)) or
-               (g_Weapon_Hit(@Obj, a, SpawnerUID, HIT_SOME) <> 0) or
+               (g_Weapon_Hit(@Obj, a, SpawnerUID, HIT_SOME, False) <> 0) or
                (Timeout < 1) then
             begin
               if ShotType = WEAPON_PLASMA then
@@ -1753,7 +1769,7 @@ begin
 
           // Попали в кого-то или в стену:
             if WordBool(st and (MOVE_HITWALL or MOVE_HITLAND or MOVE_HITCEIL)) or
-               (g_Weapon_Hit(@Obj, SHOT_BFG_DAMAGE, SpawnerUID, HIT_BFG) <> 0) or
+               (g_Weapon_Hit(@Obj, SHOT_BFG_DAMAGE, SpawnerUID, HIT_BFG, False) <> 0) or
                (Timeout < 1) then
             begin
             // Лучи BFG:
@@ -1825,7 +1841,7 @@ begin
 
           // Попали в кого-то или в стену:
             if WordBool(st and (MOVE_HITWALL or MOVE_HITLAND or MOVE_HITCEIL)) or
-               (g_Weapon_Hit(@Obj, 40, SpawnerUID, HIT_SOME) <> 0) or
+               (g_Weapon_Hit(@Obj, 40, SpawnerUID, HIT_SOME, False) <> 0) or
                (Timeout < 1) then
             begin
             // Взрыв:
