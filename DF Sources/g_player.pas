@@ -1756,7 +1756,7 @@ begin
   if g_Game_IsServer and g_Game_IsNet then
     MH_SEND_Effect(FObj.X+FObj.Rect.X+(FObj.Rect.Width div 2),
                    FObj.Y+FObj.Rect.Y+(FObj.Rect.Height div 2),
-                   0, NET_GFX_BFG);
+                   0, NET_GFX_BFGHIT);
 end;
 
 procedure TPlayer.ChangeModel(ModelName: string);
@@ -4100,7 +4100,7 @@ begin
     if not Silent then
       MH_SEND_Effect(FObj.X+PLAYER_RECT.X+(PLAYER_RECT.Width div 2)-32,
                      FObj.Y+PLAYER_RECT.Y+(PLAYER_RECT.Height div 2)-32,
-                     0, NET_GFX_SPAWN);
+                     0, NET_GFX_TELE);
   end;
 end;
 

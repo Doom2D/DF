@@ -403,6 +403,8 @@ procedure MakeShot(var Trigger: TTrigger; wx, wy, dx, dy: Integer; TargetUID: Wo
 var
   Projectile: Boolean;
   snd: string;
+  TextureID: DWORD;
+  Anim: TAnimation;
 begin
   with Trigger do
     if (Data.ShotAmmo = 0) or
@@ -532,15 +534,50 @@ begin
             g_Weapon_BFGShot(wx, wy, dx, dy, 0, -1, True);
             snd := 'SOUND_WEAPON_FIREBFG';
           end;
+
+        TRIGGER_SHOT_EXPL:
+          begin
+            if g_Frames_Get(TextureID, 'FRAMES_EXPLODE_ROCKET') then
+            begin
+              Anim := TAnimation.Create(TextureID, False, 6);
+              Anim.Blending := False;
+              g_GFX_OnceAnim(wx-64, wy-64, Anim);
+              Anim.Free();
+            end;
+            Projectile := False;
+            g_Weapon_Explode(wx, wy, 60, 0);
+            snd := 'SOUND_WEAPON_EXPLODEROCKET';
+          end;
+
+        TRIGGER_SHOT_BFGEXPL:
+          begin
+            if g_Frames_Get(TextureID, 'FRAMES_EXPLODE_BFG') then
+            begin
+              Anim := TAnimation.Create(TextureID, False, 6);
+              Anim.Blending := False;
+              g_GFX_OnceAnim(wx-64, wy-64, Anim);
+              Anim.Free();
+            end;
+            Projectile := False;
+            g_Weapon_BFG9000(wx, wy, 0);
+            snd := 'SOUND_WEAPON_EXPLODEBFG';
+          end;
       end;
 
       if g_Game_IsNet and g_Game_IsServer then
-      begin
-        if Projectile then
-          MH_SEND_CreateShot(LastShotID);
-        if Data.ShotSound then
-          MH_SEND_Sound(wx, wy, snd);
-      end;
+        case Data.ShotType of
+          TRIGGER_SHOT_EXPL:
+            MH_SEND_Effect(wx, wy, Byte(Data.ShotSound), NET_GFX_EXPLODE);
+          TRIGGER_SHOT_BFGEXPL:
+            MH_SEND_Effect(wx, wy, Byte(Data.ShotSound), NET_GFX_BFGEXPL);
+          else
+          begin
+            if Projectile then
+              MH_SEND_CreateShot(LastShotID);
+            if Data.ShotSound then
+              MH_SEND_Sound(wx, wy, snd);
+          end;
+        end;
 
       if Data.ShotSound then
         g_Sound_PlayExAt(snd, wx, wy);

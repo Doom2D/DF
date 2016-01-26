@@ -61,6 +61,7 @@ procedure g_Weapon_shotgun(x, y, xd, yd: Integer; SpawnerUID: Word; Silent: Bool
 procedure g_Weapon_dshotgun(x, y, xd, yd: Integer; SpawnerUID: Word; Silent: Boolean = False);
 
 function g_Weapon_Explode(X, Y: Integer; rad: Integer; SpawnerUID: Word): Boolean;
+procedure g_Weapon_BFG9000(X, Y: Integer; SpawnerUID: Word);
 procedure g_Weapon_Update();
 procedure g_Weapon_Draw();
 function g_Weapon_Danger(UID: Word; X, Y: Integer; Width, Height: Word; Time: Byte): Boolean;
@@ -377,7 +378,7 @@ begin
         end;
 end;
 
-procedure BFG9000(X, Y: Integer; SpawnerUID: Word);
+procedure g_Weapon_BFG9000(X, Y: Integer; SpawnerUID: Word);
 var
   i, h: Integer;
 begin
@@ -1773,7 +1774,7 @@ begin
                (Timeout < 1) then
             begin
             // Лучи BFG:
-              if g_Game_IsServer then BFG9000(cx, cy, SpawnerUID);
+              if g_Game_IsServer then g_Weapon_BFG9000(cx, cy, SpawnerUID);
 
             // Взрыв BFG:
               if g_Frames_Get(TextureID, 'FRAMES_EXPLODE_BFG') then

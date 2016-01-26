@@ -65,14 +65,15 @@ const
   NET_RCON_PWBAD  = 2;
 
   NET_GFX_SPARK   = 1;
-  NET_GFX_SPAWN   = 2;
-  NET_GFX_TELE    = 3;
-  NET_GFX_BFG     = 4;
-  NET_GFX_FIRE    = 5;
-  NET_GFX_RESPAWN = 6;
-  NET_GFX_SHELL1  = 7;
-  NET_GFX_SHELL2  = 8;
-  NET_GFX_SHELL3  = 9;
+  NET_GFX_TELE    = 2;
+  NET_GFX_RESPAWN = 3;
+  NET_GFX_FIRE    = 4;
+  NET_GFX_EXPLODE = 5;
+  NET_GFX_BFGEXPL = 6;
+  NET_GFX_BFGHIT  = 7;
+  NET_GFX_SHELL1  = 8;
+  NET_GFX_SHELL2  = 9;
+  NET_GFX_SHELL3  = 10;
 
   NET_EV_MAPSTART     = 1;
   NET_EV_MAPEND       = 2;
@@ -1427,14 +1428,6 @@ begin
     NET_GFX_SPARK:
       g_GFX_Spark(X, Y, 2 + Random(2), Ang, 0, 0);
 
-    NET_GFX_SPAWN:
-      if g_Frames_Get(ID, 'FRAMES_TELEPORT') then
-      begin
-        Anim := TAnimation.Create(ID, False, 3);
-        g_GFX_OnceAnim(X, Y, Anim);
-        Anim.Free();
-      end;
-
     NET_GFX_TELE:
     begin
       if g_Frames_Get(ID, 'FRAMES_TELEPORT') then
@@ -1447,7 +1440,33 @@ begin
         g_Sound_PlayExAt('SOUND_GAME_TELEPORT', X, Y);
     end;
 
-    NET_GFX_BFG:
+    NET_GFX_EXPLODE:
+    begin
+      if g_Frames_Get(ID, 'FRAMES_EXPLODE_ROCKET') then
+      begin
+        Anim := TAnimation.Create(ID, False, 6);
+        Anim.Blending := False;
+        g_GFX_OnceAnim(X-64, Y-64, Anim);
+        Anim.Free();
+      end;
+      if Ang = 1 then
+        g_Sound_PlayExAt('SOUND_WEAPON_EXPLODEROCKET', X, Y);
+    end;
+
+    NET_GFX_BFGEXPL:
+    begin
+      if g_Frames_Get(ID, 'FRAMES_EXPLODE_BFG') then
+      begin
+        Anim := TAnimation.Create(ID, False, 6);
+        Anim.Blending := False;
+        g_GFX_OnceAnim(X-64, Y-64, Anim);
+        Anim.Free();
+      end;
+      if Ang = 1 then
+        g_Sound_PlayExAt('SOUND_WEAPON_EXPLODEBFG', X, Y);
+    end;
+
+    NET_GFX_BFGHIT:
     begin
       if g_Frames_Get(ID, 'FRAMES_BFGHIT') then
       begin

@@ -90,6 +90,8 @@ Type
     I_ARRAY_SHOT_REV,
     I_ARRAY_SHOT_ROCKET,
     I_ARRAY_SHOT_BFG,
+    I_ARRAY_SHOT_EXPL,
+    I_ARRAY_SHOT_BFGEXPL,
 
     I_ARRAY_MON_DEMON,
     I_ARRAY_MON_IMP,
@@ -586,7 +588,7 @@ Var
   PANELNAMES: Array[0..13] of String;
   EffectNames: Array [EFFECT_NONE..EFFECT_FIRE] of String;
   ItemNames: Array [ITEM_MEDKIT_SMALL..ITEM_MAX] of String;
-  ShotNames: Array [TRIGGER_SHOT_PISTOL..TRIGGER_SHOT_BFG] of String;
+  ShotNames: Array [TRIGGER_SHOT_PISTOL..TRIGGER_SHOT_MAX] of String;
   MonsterNames: Array [MONSTER_DEMON..MONSTER_MAN] of String;
   AreaNames: Array [AREA_PLAYERPOINT1..AREA_BLUETEAMPOINT] of String;
   TriggerNames: Array [TRIGGER_EXIT..TRIGGER_SHOT] of String;
@@ -766,6 +768,10 @@ Const
                                        'Ракета'),
     ('ARRAY SHOT BFG',                 'BFG ball',
                                        'Шар BFG'),
+    ('ARRAY SHOT EXPL',                'Explosion',
+                                       'Взрыв'),
+    ('ARRAY SHOT BFGEXPL',             'BFG explosion',
+                                       'Взрыв BFG'),
 
     ('ARRAY MON DEMON',                'Pinky',
                                        'Демон'),
@@ -1781,6 +1787,8 @@ begin
   ShotNames[TRIGGER_SHOT_REV] := _lc[I_ARRAY_SHOT_REV];
   ShotNames[TRIGGER_SHOT_ROCKET] := _lc[I_ARRAY_SHOT_ROCKET];
   ShotNames[TRIGGER_SHOT_BFG] := _lc[I_ARRAY_SHOT_BFG];
+  ShotNames[TRIGGER_SHOT_EXPL] := _lc[I_ARRAY_SHOT_EXPL];
+  ShotNames[TRIGGER_SHOT_BFGEXPL] := _lc[I_ARRAY_SHOT_BFGEXPL];
 
 // Названия монстров:
   MonsterNames[MONSTER_DEMON] := _lc[I_ARRAY_MON_DEMON];
