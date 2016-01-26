@@ -305,7 +305,7 @@ begin
   gAdvBlood := config.ReadBool('Game', 'AdvancesBlood', True);
   gAdvCorpses := config.ReadBool('Game', 'AdvancesCorpses', True);
   gAdvGibs := config.ReadBool('Game', 'AdvancesGibs', True);
-  gFlash := config.ReadInt('Game', 'Flash', 1);
+  gFlash := Min(Max(config.ReadInt('Game', 'Flash', 1), 0), 2);
   gDrawBackGround := config.ReadBool('Game', 'BackGround', True);
   gShowMessages := config.ReadBool('Game', 'Messages', True);
   gRevertPlayers := config.ReadBool('Game', 'RevertPlayers', False);
