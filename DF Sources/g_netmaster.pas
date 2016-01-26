@@ -434,10 +434,13 @@ begin
   y := 90;
   for I := 0 to High(SL) do
   begin
-    if (SL[I].Ping < 0) or (SL[I].Ping > 9999) then
+    if (SL[I].Ping < 0) or (SL[I].Ping > 999) then
       e_TextureFontPrintEx(mx - 50, y, _lc[I_NET_SLIST_NO_ACCESS], gStdFont, 255, 0, 0, 1)
     else
-      e_TextureFontPrintEx(mx - 50, y, IntToStr(SL[I].Ping), gStdFont, 255, 255, 255, 1);
+      if SL[I].Ping = 0 then
+        e_TextureFontPrintEx(mx - 50, y, '<1' + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1)
+      else
+        e_TextureFontPrintEx(mx - 50, y, IntToStr(SL[I].Ping) + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1);
 
     y := y + 42;
   end;

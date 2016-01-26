@@ -323,6 +323,7 @@ type
     I_NET_SLIST_SERVERS,
     I_NET_SLIST_HELP,
     I_NET_SLIST_WAIT,
+    I_NET_SLIST_PING_MS,
     I_NET_SLIST_NO_ACCESS,
 
     I_NET_SLIST_FETCH,
@@ -1169,6 +1170,8 @@ const
                                        '[ENTER] - присоединиться   [SPACE] - обновить   [ESC] - меню'),
     ('NET SLIST WAIT',                 'Please wait...',
                                        'Подождите...'),
+    ('NET SLIST PING MS',              ' ms',
+                                       ' мс'),
     ('NET SLIST NO ACCESS',            'N/A',
                                        'Н/Д'),
 
