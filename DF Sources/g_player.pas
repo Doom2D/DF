@@ -43,6 +43,7 @@ const
   T_RESPAWN         = 0;
   T_SWITCH          = 1;
   T_USE             = 2;
+  T_FLAGCAP         = 3;
 
   TEAM_NONE         = 0;
   TEAM_RED          = 1;
@@ -195,7 +196,7 @@ type
     FBerserk:   Integer;
     FMegaRulez: Array [MR_SUIT..MR_MAX] of DWORD;
     FReloading: Array [WEAPON_KASTET..WEAPON_SUPERPULEMET] of Word;
-    FTime:      Array [T_RESPAWN..T_USE] of DWORD;
+    FTime:      Array [T_RESPAWN..T_FLAGCAP] of DWORD;
     FKeys:      Array [KEY_LEFT..KEY_CHAT] of TKeyState;
     FColor:     TRGB;
     FPreferredTeam: Byte;
@@ -228,6 +229,7 @@ type
     procedure   SetDirection(Direction: TDirection);
     procedure   GetSecret();
     function    TeleportTo(X, Y: Integer; silent: Boolean; dir: Byte): Boolean;
+    procedure   Touch();
     procedure   Push(vx, vy: Integer);
     procedure   ChangeModel(ModelName: String);
     procedure   SwitchTeam;
@@ -235,6 +237,7 @@ type
     procedure   BFGHit();
     function    GetFlag(Flag: Byte): Boolean;
     procedure   SetFlag(Flag: Byte);
+    function    DropFlag(): Boolean;
     procedure   AllRulez(Health: Boolean);
     procedure   GiveItem(ItemType: Byte);
     procedure   Damage(value: Word; SpawnerUID: Word; vx, vy: Integer; t: Byte); virtual;
@@ -810,8 +813,8 @@ begin
 // Время действия специальных предметов:
   for i := MR_SUIT to MR_MAX do
     Mem.ReadDWORD(gPlayers[a].FMegaRulez[i]);
-// Время до повторного респауна, смены оружия, исользования:
-  for i := T_RESPAWN to T_USE do
+// Время до повторного респауна, смены оружия, исользования, захвата флага:
+  for i := T_RESPAWN to T_FLAGCAP do
     Mem.ReadDWORD(gPlayers[a].FTime[i]);
 
 // Название модели:
@@ -3015,31 +3018,7 @@ begin
     end;
 
 // Выброс флага:
-    if FFlag <> FLAG_NONE then
-    begin
-      with gFlags[FFlag] do
-      begin
-        Obj.X := FObj.X;
-        Obj.Y := FObj.Y;
-        Direction := FDirection;
-        State := FLAG_STATE_DROPPED;
-        Count := FLAG_TIME;
-        g_Obj_Push(@Obj, (FObj.Vel.X div 2)-2+Random(5),
-                         (FObj.Vel.Y div 2)-2+Random(5));
-
-        if FFlag = FLAG_RED then
-          s := _lc[I_PLAYER_FLAG_RED]
-        else
-          s := _lc[I_PLAYER_FLAG_BLUE];
-
-        g_Console_Add(Format(_lc[I_PLAYER_FLAG_DROP], [FName, s]), True);
-        g_Game_Message(Format(_lc[I_MESSAGE_FLAG_DROP], [AnsiUpperCase(s)]), 144);
-
-        if Netsrv then MH_SEND_FlagEvent(FLAG_STATE_DROPPED, Flag, FUID, False);
-      end;
-      FFlag := FLAG_NONE;
-    end;
-
+    DropFlag();
   end;
 
   g_Player_CreateCorpse(Self);
@@ -3671,6 +3650,19 @@ begin
   end;
 end;
 
+procedure TPlayer.Touch();
+begin
+  if not FLive then
+    Exit;
+  FModel.PlaySound(MODELSOUND_PAIN, 1, FObj.X, FObj.Y);
+  if FIamBot then
+  begin
+  // Бросить флаг товарищу:
+    if gGameSettings.GameMode = GM_CTF then
+      DropFlag();
+  end;
+end;
+
 procedure TPlayer.Push(vx, vy: Integer);
 begin
   if (not FPhysics) and FGhost then
@@ -3688,6 +3680,7 @@ begin
 
   FSpawned := False;
   FTime[T_RESPAWN] := 0;
+  FTime[T_FLAGCAP] := 0;
   FGodMode := False;
   FNoTarget := False;
   FNoReload := False;
@@ -3706,23 +3699,21 @@ begin
   end;
   FLives := gGameSettings.MaxLives;
 
-  FFlag := 0;
-  FModel.SetFlag(FLAG_NONE);
+  SetFlag(FLAG_NONE);
 end;
 
 procedure TPlayer.SoftReset();
 begin
   ReleaseKeys();
-  FModel.SetFlag(FLAG_NONE);
-  
+
   FDamageBuffer := 0;
   FIncCam := 0;
   FBFGFireCounter := -1;
   FShellTimer := -1;
-  FFlag := 0;
   FPain := 0;
   FLastHit := 0;
 
+  SetFlag(FLAG_NONE);
   SetAction(A_STAND, True);
 end;
 
@@ -3999,7 +3990,7 @@ begin
     end;
 
   ReleaseKeys();
-  FModel.SetFlag(FLAG_NONE);
+  SetFlag(FLAG_NONE);
 
 // Воскрешение без оружия:
   if not FLive then
@@ -4062,7 +4053,6 @@ begin
   FIncCam := 0;
   FBFGFireCounter := -1;
   FShellTimer := -1;
-  FFlag := 0;
   FPain := 0;
   FLastHit := 0;
 
@@ -4849,11 +4839,25 @@ begin
 end;
 
 procedure TPlayer.Use();
+var
+  a: Integer;
 begin
   if FTime[T_USE] > gTime then Exit;
 
   g_Triggers_PressR(FObj.X+PLAYER_RECT.X, FObj.Y+PLAYER_RECT.Y, PLAYER_RECT.Width,
                     PLAYER_RECT.Height, FUID, ACTIVATE_PLAYERPRESS);
+
+  for a := 0 to High(gPlayers) do
+    if (gPlayers[a] <> nil) and (gPlayers[a] <> Self) and
+       gPlayers[a].Live and SameTeam(FUID, gPlayers[a].FUID) and
+       g_Obj_Collide(FObj.X+FObj.Rect.X, FObj.Y+FObj.Rect.Y,
+                     FObj.Rect.Width, FObj.Rect.Height, @gPlayers[a].FObj) then
+    begin
+      gPlayers[a].Touch();
+      if g_Game_IsNet and g_Game_IsServer then
+        MH_SEND_GameEvent(NET_EV_PLAYER_TOUCH, gPlayers[a].FUID);
+    end;
+
   FTime[T_USE] := gTime+120;
 end;
 
@@ -5071,8 +5075,7 @@ begin
     end;
 
     gFlags[FFlag].CaptureTime := 0;
-    FFlag := FLAG_NONE;
-    FModel.SetFlag(FLAG_NONE);
+    SetFlag(FLAG_NONE);
     Exit;
   end;
 
@@ -5103,10 +5106,9 @@ begin
   end;
 
 // Подобрал чужой флаг:
-  if Flag <> FTeam then
+  if (Flag <> FTeam) and (FTime[T_FLAGCAP] <= gTime) then
   begin
-    FFlag := Flag;
-    FModel.SetFlag(FFlag);
+    SetFlag(Flag);
 
     if Flag = FLAG_RED then
       s := _lc[I_PLAYER_FLAG_RED]
@@ -5133,7 +5135,41 @@ end;
 procedure TPlayer.SetFlag(Flag: Byte);
 begin
   FFlag := Flag;
-  FModel.SetFlag(FFlag);
+  if FModel <> nil then
+    FModel.SetFlag(FFlag);
+end;
+
+function TPlayer.DropFlag(): Boolean;
+var
+  s: String;
+begin
+  Result := False;
+  if (not g_Game_IsServer) or (FFlag = FLAG_NONE) then
+    Exit;
+  FTime[T_FLAGCAP] := gTime + 2000;
+  with gFlags[FFlag] do
+  begin
+    Obj.X := FObj.X;
+    Obj.Y := FObj.Y;
+    Direction := FDirection;
+    State := FLAG_STATE_DROPPED;
+    Count := FLAG_TIME;
+    g_Obj_Push(@Obj, (FObj.Vel.X div 2)-2+Random(5),
+                     (FObj.Vel.Y div 2)-2+Random(5));
+
+    if FFlag = FLAG_RED then
+      s := _lc[I_PLAYER_FLAG_RED]
+    else
+      s := _lc[I_PLAYER_FLAG_BLUE];
+
+    g_Console_Add(Format(_lc[I_PLAYER_FLAG_DROP], [FName, s]), True);
+    g_Game_Message(Format(_lc[I_MESSAGE_FLAG_DROP], [AnsiUpperCase(s)]), 144);
+
+    if g_Game_IsNet then
+      MH_SEND_FlagEvent(FLAG_STATE_DROPPED, Flag, FUID, False);
+  end;
+  SetFlag(FLAG_NONE);
+  Result := True;
 end;
 
 procedure TPlayer.GetSecret();
@@ -5335,8 +5371,8 @@ begin
 // Время действия специальных предметов:
   for i := MR_SUIT to MR_MAX do
     Mem.WriteDWORD(FMegaRulez[i]);
-// Время до повторного респауна, смены оружия, исользования:
-  for i := T_RESPAWN to T_USE do
+// Время до повторного респауна, смены оружия, исользования, захвата флага:
+  for i := T_RESPAWN to T_FLAGCAP do
     Mem.WriteDWORD(FTime[i]);
 // Название модели:
   str := FModel.Name;
@@ -5457,8 +5493,8 @@ begin
 // Время действия специальных предметов:
   for i := MR_SUIT to MR_MAX do
     Mem.ReadDWORD(FMegaRulez[i]);
-// Время до повторного респауна, смены оружия, исользования:
-  for i := T_RESPAWN to T_USE do
+// Время до повторного респауна, смены оружия, исользования, захвата флага:
+  for i := T_RESPAWN to T_FLAGCAP do
     Mem.ReadDWORD(FTime[i]);
 // Название модели:
   Mem.ReadString(str);

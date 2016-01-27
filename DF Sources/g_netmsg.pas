@@ -91,6 +91,7 @@ const
   NET_EV_TLMS_WIN     = 14;
   NET_EV_LMS_LOSE     = 15;
   NET_EV_LMS_DRAW     = 16;
+  NET_EV_PLAYER_TOUCH = 17;
 
   NET_VE_STARTED      = 1;
   NET_VE_PASSED       = 2;
@@ -1617,6 +1618,7 @@ var
   EvTime: LongWord;
   BHash: Boolean;
   EvHash: TMD5Digest;
+  pl: TPlayer;
 begin
   EvType := e_Raw_Read_Byte(P);
   EvNum := e_Raw_Read_LongInt(P);
@@ -1733,6 +1735,13 @@ begin
 
     NET_EV_LMS_DRAW:
       g_Game_Message(_lc[I_GAME_WIN_DRAW], 144);
+
+    NET_EV_PLAYER_TOUCH:
+    begin
+      pl := g_Player_Get(EvNum);
+      if pl <> nil then
+        pl.Touch();
+    end;
 
   end;
 end;
