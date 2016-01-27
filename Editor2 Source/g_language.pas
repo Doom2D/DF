@@ -150,6 +150,7 @@ Type
     I_ARRAY_TR_DAMAGE,
     I_ARRAY_TR_HEALTH,
     I_ARRAY_TR_SHOT,
+    I_ARRAY_TR_EFFECT,
 
     I_PROP_ID,
     I_PROP_X,
@@ -256,6 +257,24 @@ Type
     I_PROP_TR_MESSAGE_TO_5,
     I_PROP_TR_MESSAGE_TEXT,
     I_PROP_TR_MESSAGE_TIME,
+    I_PROP_TR_EFFECT_TYPE,
+    I_PROP_TR_EFFECT_SUBTYPE,
+    I_PROP_TR_EFFECT_COLOR,
+    I_PROP_TR_EFFECT_CENTER,
+    I_PROP_TR_EFFECT_VELX,
+    I_PROP_TR_EFFECT_VELY,
+    I_PROP_TR_EFFECT_SPL,
+    I_PROP_TR_EFFECT_SPR,
+    I_PROP_TR_EFFECT_SPU,
+    I_PROP_TR_EFFECT_SPD,
+    I_PROP_TR_EFFECT_PARTICLE,
+    I_PROP_TR_EFFECT_ANIMATION,
+    I_PROP_TR_EFFECT_SLIQUID,
+    I_PROP_TR_EFFECT_LLIQUID,
+    I_PROP_TR_EFFECT_DLIQUID,
+    I_PROP_TR_EFFECT_BLOOD,
+    I_PROP_TR_EFFECT_SPARK,
+    I_PROP_TR_EFFECT_BUBBLE,
 
     I_MSG_ERROR,
     I_MSG_WRONG_TEXWIDTH,
@@ -591,7 +610,7 @@ Var
   ShotNames: Array [TRIGGER_SHOT_PISTOL..TRIGGER_SHOT_MAX] of String;
   MonsterNames: Array [MONSTER_DEMON..MONSTER_MAN] of String;
   AreaNames: Array [AREA_PLAYERPOINT1..AREA_BLUETEAMPOINT] of String;
-  TriggerNames: Array [TRIGGER_EXIT..TRIGGER_SHOT] of String;
+  TriggerNames: Array [TRIGGER_EXIT..TRIGGER_MAX] of String;
 
 
 procedure g_Language_Load(fileName: String);
@@ -885,6 +904,8 @@ Const
                                        'Оздоровитель'),
     ('ARRAY TR SHOT',                  'Turret',
                                        'Турель'),
+    ('ARRAY TR EFFECT',                'Effect',
+                                       'Эффект'),
 
     ('PROP ID',                        'ID',
                                        'ID'),
@@ -1095,6 +1116,42 @@ Const
                                        'Текст сообщения'),
     ('PROP TR MESSAGE TIME',           'Time (in ticks)',
                                        'Время показа (в тиках)'),
+    ('PROP TR EFFECT TYPE',            'Effect type',
+                                       'Тип эффекта'),
+    ('PROP TR EFFECT SUBTYPE',         'Effect subtype',
+                                       'Подтип эффекта'),
+    ('PROP TR EFFECT COLOR',           'Effect color',
+                                       'Цвет эффекта'),
+    ('PROP TR EFFECT CENTER',          'Trigger center',
+                                       'По центру'),
+    ('PROP TR EFFECT VELX',            'Horizontal speed',
+                                       'Скорость по горизонтали'),
+    ('PROP TR EFFECT VELY',            'Vertical speed',
+                                       'Скорость по вертикали'),
+    ('PROP TR EFFECT SPL',             'Speed variance left',
+                                       'Отклонение влево'),
+    ('PROP TR EFFECT SPR',             'Speed variance right',
+                                       'Отклонение вправо'),
+    ('PROP TR EFFECT SPU',             'Speed variance up',
+                                       'Отклонение вверх'),
+    ('PROP TR EFFECT SPD',             'Speed variance down',
+                                       'Отклонение вниз'),
+    ('PROP TR EFFECT PARTICLE',        'Particle generator',
+                                       'Генератор частиц'),
+    ('PROP TR EFFECT ANIMATION',       'Animation',
+                                       'Анимация'),
+    ('PROP TR EFFECT SLIQUID',         'Water splash',
+                                       'Брызги воды'),
+    ('PROP TR EFFECT LLIQUID',         'Light colored splash',
+                                       'Цветные брызги (светлее)'),
+    ('PROP TR EFFECT DLIQUID',         'Dark colored splash',
+                                       'Цветные брызги (темнее)'),
+    ('PROP TR EFFECT BLOOD',           'Blood',
+                                       'Кровь'),
+    ('PROP TR EFFECT SPARK',           'Sparks',
+                                       'Искры'),
+    ('PROP TR EFFECT BUBBLE',          'Bubbles',
+                                       'Пузырьки'),
 
     ('MSG ERROR',                      'Error',
                                        'Ошибка'),
@@ -1850,6 +1907,7 @@ begin
   TriggerNames[TRIGGER_DAMAGE] := _lc[I_ARRAY_TR_DAMAGE];
   TriggerNames[TRIGGER_HEALTH] := _lc[I_ARRAY_TR_HEALTH];
   TriggerNames[TRIGGER_SHOT] := _lc[I_ARRAY_TR_SHOT];
+  TriggerNames[TRIGGER_EFFECT] := _lc[I_ARRAY_TR_EFFECT];
 
 // Установка значений в панели выбора объектов:
   with MainForm do

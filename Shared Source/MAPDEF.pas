@@ -143,6 +143,8 @@ const
   TRIGGER_DAMAGE          = 25;
   TRIGGER_HEALTH          = 26;
   TRIGGER_SHOT            = 27;
+  TRIGGER_EFFECT          = 28;
+  TRIGGER_MAX             = 28;
 
   TRIGGER_SHOT_PISTOL  = 0;
   TRIGGER_SHOT_BULLET  = 1;
@@ -168,6 +170,20 @@ const
   TRIGGER_SHOT_TARGET_BLUE   = 4;
   TRIGGER_SHOT_TARGET_MONPLR = 5;
   TRIGGER_SHOT_TARGET_PLRMON = 6;
+
+  TRIGGER_EFFECT_PARTICLE  = 0;
+  TRIGGER_EFFECT_ANIMATION = 1;
+
+  TRIGGER_EFFECT_SLIQUID = 0;
+  TRIGGER_EFFECT_LLIQUID = 1;
+  TRIGGER_EFFECT_DLIQUID = 2;
+  TRIGGER_EFFECT_BLOOD   = 3;
+  TRIGGER_EFFECT_SPARK   = 4;
+  TRIGGER_EFFECT_BUBBLE  = 5;
+  TRIGGER_EFFECT_MAX     = 5;
+
+  TRIGGER_EFFECT_POS_CENTER = 0;
+  TRIGGER_EFFECT_POS_AREA   = 1;
 
   ACTIVATE_PLAYERCOLLIDE  = 1;
   ACTIVATE_MONSTERCOLLIDE = 2;
@@ -278,6 +294,20 @@ Type
                              ShotAccuracy: Word;
                              ShotAmmo: Word;
                              ShotIntReload: Word);
+      TRIGGER_EFFECT:       (FXCount: Byte;
+                             FXType: Byte;
+                             FXSubType: Byte;
+                             FXColorR: Byte;
+                             FXColorG: Byte;
+                             FXColorB: Byte;
+                             FXPos: Byte;
+                             FXWait: Word;
+                             FXVelX: ShortInt;
+                             FXVelY: ShortInt;
+                             FXSpreadL: Byte;
+                             FXSpreadR: Byte;
+                             FXSpreadU: Byte;
+                             FXSpreadD: Byte);
   end;
 
 implementation

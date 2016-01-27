@@ -30,6 +30,7 @@ procedure g_GFX_Blood(fX, fY: Integer; Count: Word; vx, vy: Integer;
                       DevX, DevY: Word; CR, CG, CB: Byte; Kind: Byte = BLOOD_NORMAL);
 procedure g_GFX_Spark(fX, fY: Integer; Count: Word; Angle: SmallInt; DevX, DevY: Byte);
 procedure g_GFX_Water(fX, fY: Integer; Count: Word; fVelX, fVelY: Single; DevX, DevY, Color: Byte);
+procedure g_GFX_SimpleWater(fX, fY: Integer; Count: Word; fVelX, fVelY: Single; DefColor, CR, CG, CB: Byte);
 procedure g_GFX_Bubbles(fX, fY: Integer; Count: Word; DevX, DevY: Byte);
 procedure g_GFX_SetMax(Count: Integer);
 function  g_GFX_GetMax(): Integer;
@@ -521,6 +522,91 @@ begin
             Red := Trunc(200*Random);
             Green := Red;
             Blue := 175 + Random(9)*10;
+          end;
+        else // Серый
+          begin
+            Red := 90 + Random(12)*10;
+            Green := Red;
+            Blue := Red;
+          end;
+      end;
+
+      Alpha := 255;
+
+      State := STATE_NORMAL;
+      Time := 0;
+      LiveTime := 60+Random(60);
+      ParticleType := PARTICLE_WATER;
+
+      CorrectOffsets(CurrentParticle);
+    end;
+
+    if CurrentParticle+2 > MaxParticles then
+      CurrentParticle := 0
+    else
+      CurrentParticle := CurrentParticle+1;
+  end;
+end;
+
+procedure g_GFX_SimpleWater(fX, fY: Integer; Count: Word; fVelX, fVelY: Single; DefColor, CR, CG, CB: Byte);
+var
+  a: Integer;
+  l: Integer;
+begin
+  l := Length(Particles);
+  if l = 0 then
+    Exit;
+  if Count > l then
+    Count := l;
+
+  for a := 1 to Count do
+  begin
+    with Particles[CurrentParticle] do
+    begin
+      X := fX;
+      Y := fY;
+
+      VelX := fVelX;
+      VelY := fVelY;
+      AccelX := 0.0;
+      AccelY := 0.8;
+
+      case DefColor of
+        1: // Красный
+          begin
+            Red := 155 + Random(9)*10;
+            Green := Trunc(150*Random);
+            Blue := Green;
+          end;
+        2: // Зеленый
+          begin
+            Red := Trunc(150*Random);
+            Green := 175 + Random(9)*10;
+            Blue := Red;
+          end;
+        3: // Синий
+          begin
+            Red := Trunc(200*Random);
+            Green := Red;
+            Blue := 175 + Random(9)*10;
+          end;
+        4: // Свой цвет, светлее
+          begin
+            Red := 20 + Random(19)*10;
+            Green := Red;
+            Blue := Red;
+            Red := Min(Red + CR, 255);
+            Green := Min(Green + CG, 255);
+            Blue := Min(Blue + CB, 255);
+          end;
+        5: // Свой цвет, темнее
+          begin
+            Red := 20 + Random(19)*10;
+            Green := Red;
+            Blue := Red;
+            Red := Max(CR - Red, 0);
+            Green := Max(CG - Green, 0);
+            Blue := Max(CB - Blue, 0);
           end;
         else // Серый
           begin

@@ -587,6 +587,76 @@ begin
         ShotReloadTime := Data.ShotIntReload; // тиков на перезарядку пушки
 end;
 
+procedure MakeEffect(X, Y, VX, VY: Integer; T, ST, CR, CG, CB: Byte; Silent, Send: Boolean);
+var
+  FramesID: DWORD;
+  Anim: TAnimation;
+begin
+  if T = TRIGGER_EFFECT_PARTICLE then
+    case ST of
+      TRIGGER_EFFECT_SLIQUID:
+      begin
+        if (CR = 255) and (CG = 0) and (CB = 0) then
+          g_GFX_SimpleWater(X, Y, 1, VX, VY, 1, 0, 0, 0)
+        else if (CR = 0) and (CG = 255) and (CB = 0) then
+          g_GFX_SimpleWater(X, Y, 1, VX, VY, 2, 0, 0, 0)
+        else if (CR = 0) and (CG = 0) and (CB = 255) then
+          g_GFX_SimpleWater(X, Y, 1, VX, VY, 3, 0, 0, 0)
+        else
+          g_GFX_SimpleWater(X, Y, 1, VX, VY, 0, 0, 0, 0);
+      end;
+      TRIGGER_EFFECT_LLIQUID:
+        g_GFX_SimpleWater(X, Y, 1, VX, VY, 4, CR, CG, CB);
+      TRIGGER_EFFECT_DLIQUID:
+        g_GFX_SimpleWater(X, Y, 1, VX, VY, 5, CR, CG, CB);
+      TRIGGER_EFFECT_BLOOD:
+        g_GFX_Blood(X, Y, 1, VX, VY, 0, 0, CR, CG, CB);
+      TRIGGER_EFFECT_SPARK:
+        g_GFX_Spark(X, Y, 1, GetAngle2(VX, VY), 0, 0);
+      TRIGGER_EFFECT_BUBBLE:
+        g_GFX_Bubbles(X, Y, 1, 0, 0);
+    end;
+  if T = TRIGGER_EFFECT_ANIMATION then
+    case ST of
+      EFFECT_TELEPORT: begin
+        if g_Frames_Get(FramesID, 'FRAMES_TELEPORT') then
+        begin
+          Anim := TAnimation.Create(FramesID, False, 3);
+          if not Silent then
+            g_Sound_PlayExAt('SOUND_GAME_TELEPORT', X, Y);
+          g_GFX_OnceAnim(X-32, Y-32, Anim);
+          Anim.Free();
+        end;
+        if Send and g_Game_IsServer and g_Game_IsNet then
+          MH_SEND_Effect(X, Y, Byte(not Silent), NET_GFX_TELE);
+      end;
+      EFFECT_RESPAWN: begin
+        if g_Frames_Get(FramesID, 'FRAMES_ITEM_RESPAWN') then
+        begin
+          Anim := TAnimation.Create(FramesID, False, 4);
+          if not Silent then
+            g_Sound_PlayExAt('SOUND_ITEM_RESPAWNITEM', X, Y);
+          g_GFX_OnceAnim(X-16, Y-16, Anim);
+          Anim.Free();
+        end;
+        if Send and g_Game_IsServer and g_Game_IsNet then
+          MH_SEND_Effect(X-16, Y-16, Byte(not Silent), NET_GFX_RESPAWN);
+      end;
+      EFFECT_FIRE: begin
+        if g_Frames_Get(FramesID, 'FRAMES_FIRE') then
+        begin
+          Anim := TAnimation.Create(FramesID, False, 4);
+          if not Silent then
+            g_Sound_PlayExAt('SOUND_FIRE', X, Y);
+          g_GFX_OnceAnim(X-32, Y-128, Anim);
+          Anim.Free();
+        end;
+        if Send and g_Game_IsServer and g_Game_IsNet then
+          MH_SEND_Effect(X-32, Y-128, Byte(not Silent), NET_GFX_FIRE);
+      end;
+    end;
+end;
+
 function ActivateTrigger(var Trigger: TTrigger; actType: Byte): Boolean;
 var
   animonce: Boolean;
@@ -903,7 +973,7 @@ begin
               end;
 
               case Data.MonEffect of
-                1: begin
+                EFFECT_TELEPORT: begin
                   if g_Frames_Get(FramesID, 'FRAMES_TELEPORT') then
                   begin
                     Anim := TAnimation.Create(FramesID, False, 3);
@@ -917,7 +987,7 @@ begin
                                    gMonsters[i].Obj.Y+gMonsters[i].Obj.Rect.Y+(gMonsters[i].Obj.Rect.Height div 2)-32, 1,
                                    NET_GFX_TELE);
                 end;
-                2: begin
+                EFFECT_RESPAWN: begin
                   if g_Frames_Get(FramesID, 'FRAMES_ITEM_RESPAWN') then
                   begin
                     Anim := TAnimation.Create(FramesID, False, 4);
@@ -931,7 +1001,7 @@ begin
                                    gMonsters[i].Obj.Y+gMonsters[i].Obj.Rect.Y+(gMonsters[i].Obj.Rect.Height div 2)-16, 1,
                                    NET_GFX_RESPAWN);
                 end;
-                3: begin
+                EFFECT_FIRE: begin
                   if g_Frames_Get(FramesID, 'FRAMES_FIRE') then
                   begin
                     Anim := TAnimation.Create(FramesID, False, 4);
@@ -1000,7 +1070,7 @@ begin
                 end;
 
                 case Data.ItemEffect of
-                  1: begin
+                  EFFECT_TELEPORT: begin
                     if g_Frames_Get(FramesID, 'FRAMES_TELEPORT') then
                     begin
                       Anim := TAnimation.Create(FramesID, False, 3);
@@ -1014,7 +1084,7 @@ begin
                                      gItems[iid].Obj.Y+gItems[iid].Obj.Rect.Y+(gItems[iid].Obj.Rect.Height div 2)-32, 1,
                                      NET_GFX_TELE);
                   end;
-                  2: begin
+                  EFFECT_RESPAWN: begin
                     if g_Frames_Get(FramesID, 'FRAMES_ITEM_RESPAWN') then
                     begin
                       Anim := TAnimation.Create(FramesID, False, 4);
@@ -1028,7 +1098,7 @@ begin
                                      gItems[iid].Obj.Y+gItems[iid].Obj.Rect.Y+(gItems[iid].Obj.Rect.Height div 2)-16, 1,
                                      NET_GFX_RESPAWN);
                   end;
-                  3: begin
+                  EFFECT_FIRE: begin
                     if g_Frames_Get(FramesID, 'FRAMES_FIRE') then
                     begin
                       Anim := TAnimation.Create(FramesID, False, 4);
@@ -1720,6 +1790,42 @@ begin
           end;
 
           TimeOut := Data.ShotWait + 1;
+        end;
+
+      TRIGGER_EFFECT:
+        begin
+          i := Data.FXCount;
+
+          while i > 0 do
+          begin
+            case Data.FXPos of
+              TRIGGER_EFFECT_POS_CENTER:
+              begin
+                wx := X + Width div 2;
+                wy := Y + Height div 2;
+              end;
+              TRIGGER_EFFECT_POS_AREA:
+              begin
+                wx := X + Random(Width);
+                wy := Y + Random(Height);
+              end;
+              else begin
+                wx := X + Width div 2;
+                wy := Y + Height div 2;
+              end;
+            end;
+            xd := Data.FXVelX;
+            yd := Data.FXVelY;
+            if Data.FXSpreadL > 0 then xd := xd - Random(Data.FXSpreadL + 1);
+            if Data.FXSpreadR > 0 then xd := xd + Random(Data.FXSpreadR + 1);
+            if Data.FXSpreadU > 0 then yd := yd - Random(Data.FXSpreadU + 1);
+            if Data.FXSpreadD > 0 then yd := yd + Random(Data.FXSpreadD + 1);
+            MakeEffect(wx, wy, xd, yd,
+                       Data.FXType, Data.FXSubType,
+                       Data.FXColorR, Data.FXColorG, Data.FXColorB, True, False);
+            Dec(i);
+          end;
+          TimeOut := Data.FXWait;
         end;
     end;
   end;

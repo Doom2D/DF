@@ -175,6 +175,7 @@ type
     SaveDialog: TSaveDialog;
     selectall1: TMenuItem;
     XPManifest: TXPManifest;
+    ColorDialog: TColorDialog;
 
     procedure aAboutExecute(Sender: TObject);
     procedure aCheckMapExecute(Sender: TObject);
@@ -1489,6 +1490,107 @@ begin
                 begin
                   EditStyle := esSimple;
                   MaxLength := 4;
+                end;
+              end;
+
+            TRIGGER_EFFECT:
+              begin
+                with ItemProps[InsertRow(_lc[I_PROP_TR_COUNT], IntToStr(Data.FXCount), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 3;
+                end;
+
+                if Data.FXType = 0 then
+                  str := _lc[I_PROP_TR_EFFECT_PARTICLE]
+                else
+                  str := _lc[I_PROP_TR_EFFECT_ANIMATION];
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_TYPE], str, True)-1] do
+                begin
+                  EditStyle := esEllipsis;
+                  ReadOnly := True;
+                end;
+
+                str := '';
+                if Data.FXType = 0 then
+                  case Data.FXSubType of
+                    TRIGGER_EFFECT_SLIQUID:
+                      str := _lc[I_PROP_TR_EFFECT_SLIQUID];
+                    TRIGGER_EFFECT_LLIQUID:
+                      str := _lc[I_PROP_TR_EFFECT_LLIQUID];
+                    TRIGGER_EFFECT_DLIQUID:
+                      str := _lc[I_PROP_TR_EFFECT_DLIQUID];
+                    TRIGGER_EFFECT_BLOOD:
+                      str := _lc[I_PROP_TR_EFFECT_BLOOD];
+                    TRIGGER_EFFECT_SPARK:
+                      str := _lc[I_PROP_TR_EFFECT_SPARK];
+                    TRIGGER_EFFECT_BUBBLE:
+                      str := _lc[I_PROP_TR_EFFECT_BUBBLE];
+                  end;
+                if Data.FXType = 1 then
+                begin
+                  if (Data.FXSubType = 0) or (Data.FXSubType > EFFECT_FIRE) then
+                    Data.FXSubType := EFFECT_TELEPORT;
+                  str := EffectToStr(Data.FXSubType);
+                end;
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_SUBTYPE], str, True)-1] do
+                begin
+                  EditStyle := esEllipsis;
+                  ReadOnly := True;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_COLOR], IntToStr(Data.FXColorR or (Data.FXColorG shl 8) or (Data.FXColorB shl 16)), True)-1] do
+                begin
+                  EditStyle := esEllipsis;
+                  ReadOnly := True;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_CENTER], BoolNames[Data.FXPos = 0], True)-1] do
+                begin
+                  EditStyle := esPickList;
+                  ReadOnly := True;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EX_DELAY], IntToStr(Data.FXWait), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 5;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_VELX], IntToStr(Data.FXVelX), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 4;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_VELY], IntToStr(Data.FXVelY), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 4;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_SPL], IntToStr(Data.FXSpreadL), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 3;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_SPR], IntToStr(Data.FXSpreadR), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 3;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_SPU], IntToStr(Data.FXSpreadU), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 3;
+                end;
+
+                with ItemProps[InsertRow(_lc[I_PROP_TR_EFFECT_SPD], IntToStr(Data.FXSpreadD), True)-1] do
+                begin
+                  EditStyle := esSimple;
+                  MaxLength := 3;
                 end;
               end;
           end; //case TriggerType
@@ -3622,6 +3724,24 @@ begin
                       trigger.Data.ShotAmmo := 0;
                       trigger.Data.ShotIntReload := 0;
                     end;
+
+                  TRIGGER_EFFECT:
+                    begin
+                      trigger.Data.FXCount := 1;
+                      trigger.Data.FXType := TRIGGER_EFFECT_PARTICLE;
+                      trigger.Data.FXSubType := TRIGGER_EFFECT_SLIQUID;
+                      trigger.Data.FXColorR := 0;
+                      trigger.Data.FXColorG := 0;
+                      trigger.Data.FXColorB := 255;
+                      trigger.Data.FXPos := TRIGGER_EFFECT_POS_CENTER;
+                      trigger.Data.FXWait := 1;
+                      trigger.Data.FXVelX := 0;
+                      trigger.Data.FXVelY := -20;
+                      trigger.Data.FXSpreadL := 5;
+                      trigger.Data.FXSpreadR := 5;
+                      trigger.Data.FXSpreadU := 4;
+                      trigger.Data.FXSpreadD := 0;
+                    end;
                 end;
 
                 Undo_Add(OBJECT_TRIGGER, AddTrigger(trigger));
@@ -4285,7 +4405,8 @@ begin
             (KeyName = _lc[I_PROP_TR_PUSH_RESET]) or
             (KeyName = _lc[I_PROP_TR_HEALTH_MAX]) or
             (KeyName = _lc[I_PROP_TR_SHOT_ALLMAP]) or
-            (KeyName = _lc[I_PROP_TR_SHOT_SOUND]) then
+            (KeyName = _lc[I_PROP_TR_SHOT_SOUND]) or
+            (KeyName = _lc[I_PROP_TR_EFFECT_CENTER]) then
       begin
         Values.Add(BoolNames[True]);
         Values.Add(BoolNames[False]);
@@ -4706,6 +4827,56 @@ begin
                   StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_SHOT_AMMO]], 0), 0), 65535);
                 Data.ShotIntReload := Min(Max(
                   StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_SHOT_RELOAD]], 0), 0), 65535);
+              end;
+
+            TRIGGER_EFFECT:
+              begin
+                Data.FXCount := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_COUNT]], 0), 0), 255);
+                if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_TYPE]] = _lc[I_PROP_TR_EFFECT_PARTICLE] then
+                begin
+                  Data.FXType := TRIGGER_EFFECT_PARTICLE;
+                  Data.FXSubType := TRIGGER_EFFECT_SLIQUID;
+                  if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_SLIQUID] then
+                    Data.FXSubType := TRIGGER_EFFECT_SLIQUID
+                  else if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_LLIQUID] then
+                    Data.FXSubType := TRIGGER_EFFECT_LLIQUID
+                  else if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_DLIQUID] then
+                    Data.FXSubType := TRIGGER_EFFECT_DLIQUID
+                  else if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_BLOOD] then
+                    Data.FXSubType := TRIGGER_EFFECT_BLOOD
+                  else if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_SPARK] then
+                    Data.FXSubType := TRIGGER_EFFECT_SPARK
+                  else if vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]] = _lc[I_PROP_TR_EFFECT_BUBBLE] then
+                    Data.FXSubType := TRIGGER_EFFECT_BUBBLE;
+                end else
+                begin
+                  Data.FXType := TRIGGER_EFFECT_ANIMATION;
+                  Data.FXSubType := StrToEffect(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SUBTYPE]]);
+                end;
+                a := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_COLOR]], 0), 0), $FFFFFF);
+                Data.FXColorR := a and $FF;
+                Data.FXColorG := (a shr 8) and $FF;
+                Data.FXColorB := (a shr 16) and $FF;
+                if NameToBool(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_CENTER]]) then
+                  Data.FXPos := 0
+                else
+                  Data.FXPos := 1;
+                Data.FXWait := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EX_DELAY]], 0), 0), 65535);
+                Data.FXVelX := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_VELX]], 0), -128), 127);
+                Data.FXVelY := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_VELY]], 0), -128), 127);
+                Data.FXSpreadL := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPL]], 0), 0), 255);
+                Data.FXSpreadR := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPR]], 0), 0), 255);
+                Data.FXSpreadU := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPU]], 0), 0), 255);
+                Data.FXSpreadD := Min(Max(
+                  StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPD]], 0), 0), 255);
               end;
           end;
         end;
@@ -5366,6 +5537,95 @@ begin
       begin
         b := lbTypeSelect.ItemIndex;
         Values[Key] := ShotToStr(b);
+        bApplyProperty.Click();
+      end;
+    end
+  else if Key = _lc[I_PROP_TR_EFFECT_TYPE] then
+    with ChooseTypeForm, vleObjectProperty do
+    begin // Выбор типа эффекта:
+      Caption := _lc[I_CAP_FX_TYPE];
+      lbTypeSelect.Items.Clear();
+
+      lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_PARTICLE]);
+      lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_ANIMATION]);
+      if Values[Key] = _lc[I_PROP_TR_EFFECT_ANIMATION] then
+        lbTypeSelect.ItemIndex := 1
+      else
+        lbTypeSelect.ItemIndex := 0;
+
+      if ShowModal() = mrOK then
+      begin
+        b := lbTypeSelect.ItemIndex;
+        if b = 0 then
+          Values[Key] := _lc[I_PROP_TR_EFFECT_PARTICLE]
+        else
+          Values[Key] := _lc[I_PROP_TR_EFFECT_ANIMATION];
+        bApplyProperty.Click();
+      end;
+    end
+  else if Key = _lc[I_PROP_TR_EFFECT_SUBTYPE] then
+    with ChooseTypeForm, vleObjectProperty do
+    begin // Выбор подтипа эффекта:
+      Caption := _lc[I_CAP_FX_TYPE];
+      lbTypeSelect.Items.Clear();
+
+      if Values[_lc[I_PROP_TR_EFFECT_TYPE]] = _lc[I_PROP_TR_EFFECT_ANIMATION] then
+      begin
+        for b := EFFECT_TELEPORT to EFFECT_FIRE do
+          lbTypeSelect.Items.Add(EffectToStr(b));
+
+        lbTypeSelect.ItemIndex := StrToEffect(Values[Key]) - 1;
+      end else
+      begin
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_SLIQUID]);
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_LLIQUID]);
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_DLIQUID]);
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_BLOOD]);
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_SPARK]);
+        lbTypeSelect.Items.Add(_lc[I_PROP_TR_EFFECT_BUBBLE]);
+        lbTypeSelect.ItemIndex := TRIGGER_EFFECT_SLIQUID;
+        if Values[Key] = _lc[I_PROP_TR_EFFECT_LLIQUID] then
+          lbTypeSelect.ItemIndex := TRIGGER_EFFECT_LLIQUID;
+        if Values[Key] = _lc[I_PROP_TR_EFFECT_DLIQUID] then
+          lbTypeSelect.ItemIndex := TRIGGER_EFFECT_DLIQUID;
+        if Values[Key] = _lc[I_PROP_TR_EFFECT_BLOOD] then
+          lbTypeSelect.ItemIndex := TRIGGER_EFFECT_BLOOD;
+        if Values[Key] = _lc[I_PROP_TR_EFFECT_SPARK] then
+          lbTypeSelect.ItemIndex := TRIGGER_EFFECT_SPARK;
+        if Values[Key] = _lc[I_PROP_TR_EFFECT_BUBBLE] then
+          lbTypeSelect.ItemIndex := TRIGGER_EFFECT_BUBBLE;
+      end;
+
+      if ShowModal() = mrOK then
+      begin
+        b := lbTypeSelect.ItemIndex;
+
+        if Values[_lc[I_PROP_TR_EFFECT_TYPE]] = _lc[I_PROP_TR_EFFECT_ANIMATION] then
+          Values[Key] := EffectToStr(b + 1)
+        else begin
+          Values[Key] := _lc[I_PROP_TR_EFFECT_SLIQUID];
+          if b = TRIGGER_EFFECT_LLIQUID then
+            Values[Key] := _lc[I_PROP_TR_EFFECT_LLIQUID];
+          if b = TRIGGER_EFFECT_DLIQUID then
+            Values[Key] := _lc[I_PROP_TR_EFFECT_DLIQUID];
+          if b = TRIGGER_EFFECT_BLOOD then
+            Values[Key] := _lc[I_PROP_TR_EFFECT_BLOOD];
+          if b = TRIGGER_EFFECT_SPARK then
+            Values[Key] := _lc[I_PROP_TR_EFFECT_SPARK];
+          if b = TRIGGER_EFFECT_BUBBLE then
+            Values[Key] := _lc[I_PROP_TR_EFFECT_BUBBLE];
+        end;
+
+        bApplyProperty.Click();
+      end;
+    end
+  else if Key = _lc[I_PROP_TR_EFFECT_COLOR] then
+    with vleObjectProperty do
+    begin // Выбор цвета эффекта:
+      ColorDialog.Color := StrToIntDef(Values[Key], 0);
+      if ColorDialog.Execute then
+      begin
+        Values[Key] := IntToStr(ColorDialog.Color);
         bApplyProperty.Click();
       end;
     end

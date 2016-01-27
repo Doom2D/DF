@@ -3444,4 +3444,9 @@ object MainForm: TMainForm
     Left = 32
     Top = 146
   end
+  object ColorDialog: TColorDialog
+    Options = [cdFullOpen]
+    Left = 64
+    Top = 146
+  end
 end
