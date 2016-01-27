@@ -2922,19 +2922,20 @@ begin
         else
           s := plr.FName;
 
-        if KillType = K_EXTRAHARDKILL then
-          case Random(2) of
-            0: g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_1],
-                                    [FName, s]),
-                             gShowKillMsg);
-            1: g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_2],
-                                    [FName, s]),
-                             gShowKillMsg);
-          end
-        else
-          g_Console_Add(Format(_lc[I_PLAYER_KILL],
-                               [FName, s]),
-                        gShowKillMsg);
+        case KillType of
+          K_HARDKILL:
+            g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_2],
+                                 [FName, s]),
+                          gShowKillMsg);
+          K_EXTRAHARDKILL:
+            g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_1],
+                                 [FName, s]),
+                          gShowKillMsg);
+          else
+            g_Console_Add(Format(_lc[I_PLAYER_KILL],
+                                 [FName, s]),
+                          gShowKillMsg);
+        end;
       end
     else if g_GetUIDType(SpawnerUID) = UID_MONSTER then
       begin // Убит монстром
@@ -2944,19 +2945,20 @@ begin
         else
           s := g_Monsters_GetKilledBy(mon.MonsterType);
 
-        if KillType = K_EXTRAHARDKILL then
-          case Random(2) of
-            0: g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_1],
-                                    [FName, s]),
-                             gShowKillMsg);
-            1: g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_2],
-                                    [FName, s]),
-                             gShowKillMsg);
-          end
-        else
-          g_Console_Add(Format(_lc[I_PLAYER_KILL],
-                               [FName, s]),
-                        gShowKillMsg);
+        case KillType of
+          K_HARDKILL:
+            g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_2],
+                                 [FName, s]),
+                          gShowKillMsg);
+          K_EXTRAHARDKILL:
+            g_Console_Add(Format(_lc[I_PLAYER_KILL_EXTRAHARD_1],
+                                 [FName, s]),
+                          gShowKillMsg);
+          else
+            g_Console_Add(Format(_lc[I_PLAYER_KILL],
+                                 [FName, s]),
+                          gShowKillMsg);
+        end;
       end
     else // Особые типы смерти
       case t of
