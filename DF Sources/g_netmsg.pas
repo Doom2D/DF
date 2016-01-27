@@ -2646,19 +2646,19 @@ begin
   if (not gConsoleShow) and (not gChatShow) and (g_ActiveWindow = nil) then
     with gGameControls.P1Control do
     begin
-      if (e_KeyBuffer[KeyLeft] = $080) and (e_KeyBuffer[KeyRight] <> $080) then
+      if e_KeyPressed(KeyLeft) and (not e_KeyPressed(KeyRight)) then
         P1MoveButton := 1
       else
-        if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] = $080) then
+        if (not e_KeyPressed(KeyLeft)) and e_KeyPressed(KeyRight) then
           P1MoveButton := 2
         else
-          if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] <> $080) then
+          if (not e_KeyPressed(KeyLeft)) and (not e_KeyPressed(KeyRight)) then
             P1MoveButton := 0;
 
-      if (P1MoveButton = 2) and (e_KeyBuffer[KeyLeft] = $080) then
+      if (P1MoveButton = 2) and e_KeyPressed(KeyLeft) then
         gPlayer1.SetDirection(D_LEFT)
       else
-       if (P1MoveButton = 1) and (e_KeyBuffer[KeyRight] = $080) then
+       if (P1MoveButton = 1) and e_KeyPressed(KeyRight) then
           gPlayer1.SetDirection(D_RIGHT)
         else
           if P1MoveButton <> 0 then
@@ -2675,28 +2675,28 @@ begin
         kByte := kByte or NET_KEY_RIGHT;
         if Predict then gPlayer1.PressKey(KEY_RIGHT, 10000);
       end;
-      if e_KeyBuffer[KeyUp] = $080 then
+      if e_KeyPressed(KeyUp) then
       begin
         kByte := kByte or NET_KEY_UP;
         gPlayer1.PressKey(KEY_UP, 10000);
       end;
-      if e_KeyBuffer[KeyDown] = $080 then
+      if e_KeyPressed(KeyDown) then
       begin
         kByte := kByte or NET_KEY_DOWN;
         gPlayer1.PressKey(KEY_DOWN, 10000);
       end;
-      if e_KeyBuffer[KeyJump] = $080 then
+      if e_KeyPressed(KeyJump) then
       begin
         kByte := kByte or NET_KEY_JUMP;
         // gPlayer1.PressKey(KEY_JUMP, 10000); // TODO: Make a prediction option
       end;
-      if e_KeyBuffer[KeyFire] = $080 then kByte := kByte or NET_KEY_FIRE;
-      if e_KeyBuffer[KeyOpen] = $080 then kByte := kByte or NET_KEY_OPEN;
-      if e_KeyBuffer[KeyNextWeapon] = $080 then kByte := kByte or NET_KEY_NW;
-      if e_KeyBuffer[KeyPrevWeapon] = $080 then kByte := kByte or NET_KEY_PW;
+      if e_KeyPressed(KeyFire) then kByte := kByte or NET_KEY_FIRE;
+      if e_KeyPressed(KeyOpen) then kByte := kByte or NET_KEY_OPEN;
+      if e_KeyPressed(KeyNextWeapon) then kByte := kByte or NET_KEY_NW;
+      if e_KeyPressed(KeyPrevWeapon) then kByte := kByte or NET_KEY_PW;
     end
   else
-   kByte := NET_KEY_CHAT;
+    kByte := NET_KEY_CHAT;
 
   e_Buffer_Write(@NetOut, Byte(NET_MSG_PLRPOS));
   e_Buffer_Write(@NetOut, gTime);

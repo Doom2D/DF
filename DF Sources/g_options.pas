@@ -7,22 +7,22 @@ uses
 
 type
   TPlayerControl = record
-    KeyRight:      Byte;
-    KeyLeft:       Byte;
-    KeyUp:         Byte;
-    KeyDown:       Byte;
-    KeyFire:       Byte;
-    KeyJump:       Byte;
-    KeyNextWeapon: Byte;
-    KeyPrevWeapon: Byte;
-    KeyOpen:       Byte;
+    KeyRight:      Word;
+    KeyLeft:       Word;
+    KeyUp:         Word;
+    KeyDown:       Word;
+    KeyFire:       Word;
+    KeyJump:       Word;
+    KeyNextWeapon: Word;
+    KeyPrevWeapon: Word;
+    KeyOpen:       Word;
   end;
 
   TGameControls = record
-    TakeScreenshot: Byte;
-    Stat: Byte;
-    Chat: Byte;
-    TeamChat: Byte;
+    TakeScreenshot: Word;
+    Stat:           Word;
+    Chat:           Word;
+    TeamChat:       Word;
   end;
 
   TControls = record

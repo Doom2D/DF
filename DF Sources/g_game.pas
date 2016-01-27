@@ -992,7 +992,7 @@ begin
   gTime := 0;
   LastScreenShot := 0;
 
-  e_MouseInfo.Accel := 1.0;
+  {e_MouseInfo.Accel := 1.0;}
 
   g_Game_SetLoadingText(_lc[I_LOAD_GAME_DATA], 0, False);
   g_Game_LoadData();
@@ -1125,6 +1125,7 @@ var
   Msg: g_gui.TMessage;
   Time: Int64;
   a: Byte;
+  w: Word;
   i, b: Integer;
 begin
 // Пора выключать игру:
@@ -1138,8 +1139,9 @@ begin
       Exit;
   end;
 
-// Читаем клавиатуру, если окно активно:
-  e_PollKeyboard();
+// Читаем клавиатуру и джойстик, если окно активно:
+  e_PollInput();
+  
 // Обновляем консоль (движение и сообщения):
   g_Console_Update();
 
@@ -1169,15 +1171,15 @@ begin
 
         if (not g_Game_IsClient) and
         (
-         (
-         ((e_KeyBuffer[28] = $080) or (e_KeyBuffer[57] = $080))
-         and (not gJustChatted) and (not gConsoleShow) and (not gChatShow)
-         and (g_ActiveWindow = nil)
-         )
-         or (g_Game_IsNet and (gInterTime > gInterEndTime))
+          (
+            (e_KeyPressed(e_IKey_Enter) or e_KeyPressed(e_IKey_Space))
+            and (not gJustChatted) and (not gConsoleShow) and (not gChatShow)
+            and (g_ActiveWindow = nil)
+          )
+          or (g_Game_IsNet and (gInterTime > gInterEndTime))
         )
         then
-        begin // Нажали <Enter> или <Пробел>:
+        begin // Нажали <Enter>/<Пробел> или прошло достаточно времени:
           g_Game_StopAllSounds(True);
 
           if gMapOnce then // Это был тест
@@ -1266,23 +1268,23 @@ begin
       begin
         if g_ActiveWindow = nil then
         begin
-          if e_KeyBuffer[gGameControls.GameControls.Chat] = $080 then
+          if e_KeyPressed(gGameControls.GameControls.Chat) then
             g_Console_Chat_Switch(False)
-          else if (e_KeyBuffer[gGameControls.GameControls.TeamChat] = $080) and
+          else if (e_KeyPressed(gGameControls.GameControls.TeamChat)) and
                   (gGameSettings.GameMode in [GM_TDM, GM_CTF]) then
             g_Console_Chat_Switch(True);
         end;
       end else
         if not gChatEnter then
-          if (e_KeyBuffer[gGameControls.GameControls.Chat] <> $080)
-          and (e_KeyBuffer[gGameControls.GameControls.TeamChat] <> $080) then
+          if (not e_KeyPressed(gGameControls.GameControls.Chat))
+             and (not e_KeyPressed(gGameControls.GameControls.TeamChat)) then
             gChatEnter := True;
 
 // Статистика по Tab:
   if gGameOn then
     IsDrawStat := (not gConsoleShow) and (not gChatShow) and
                   (gGameSettings.GameType <> GT_SINGLE) and
-                  (e_KeyBuffer[gGameControls.GameControls.Stat] = $080);
+                  e_KeyPressed(gGameControls.GameControls.Stat);
 
 // Игра идет:
   if gGameOn and not gPause and (gState <> STATE_FOLD) then
@@ -1361,13 +1363,13 @@ begin
         if gPlayer1 <> nil then
           with gGameControls.P1Control do
           begin
-            if (e_KeyBuffer[KeyLeft] = $080) and (e_KeyBuffer[KeyRight] <> $080) then
+            if e_KeyPressed(KeyLeft) and (not e_KeyPressed(KeyRight)) then
               P1MoveButton := 1 // Нажата только "Влево"
             else
-              if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] = $080) then
+              if (not e_KeyPressed(KeyLeft)) and e_KeyPressed(KeyRight) then
                 P1MoveButton := 2 // Нажата только "Вправо"
               else
-                if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] <> $080) then
+                if (not e_KeyPressed(KeyLeft)) and (not e_KeyPressed(KeyRight)) then
                   P1MoveButton := 0; // Не нажаты ни "Влево", ни "Вправо"
 
           // Сейчас или раньше были нажаты "Влево"/"Вправо" => передаем игроку:
@@ -1378,11 +1380,11 @@ begin
               gPlayer1.PressKey(KEY_RIGHT);
 
           // Раньше была нажата "Вправо", а сейчас "Влево" => бежим вправо, смотрим влево:
-            if (P1MoveButton = 2) and (e_KeyBuffer[KeyLeft] = $080) then
+            if (P1MoveButton = 2) and e_KeyPressed(KeyLeft) then
               gPlayer1.SetDirection(D_LEFT)
             else
             // Раньше была нажата "Влево", а сейчас "Вправо" => бежим влево, смотрим вправо:
-              if (P1MoveButton = 1) and (e_KeyBuffer[KeyRight] = $080) then
+              if (P1MoveButton = 1) and e_KeyPressed(KeyRight) then
                 gPlayer1.SetDirection(D_RIGHT)
               else
               // Что-то было нажато и не изменилось => куда бежим, туда и смотрим:
@@ -1390,25 +1392,25 @@ begin
                   gPlayer1.SetDirection(TDirection(P1MoveButton-1));
 
           // Остальные клавиши:
-            if e_KeyBuffer[KeyJump] = $080 then gPlayer1.PressKey(KEY_JUMP);
-            if e_KeyBuffer[KeyUp] = $080 then gPlayer1.PressKey(KEY_UP);
-            if e_KeyBuffer[KeyDown] = $080 then gPlayer1.PressKey(KEY_DOWN);
-            if e_KeyBuffer[KeyFire] = $080 then gPlayer1.PressKey(KEY_FIRE);
-            if e_KeyBuffer[KeyNextWeapon] = $080 then gPlayer1.PressKey(KEY_NEXTWEAPON);
-            if e_KeyBuffer[KeyPrevWeapon] = $080 then gPlayer1.PressKey(KEY_PREVWEAPON);
-            if e_KeyBuffer[KeyOpen] = $080 then gPlayer1.PressKey(KEY_OPEN);
+            if e_KeyPressed(KeyJump) then gPlayer1.PressKey(KEY_JUMP);
+            if e_KeyPressed(KeyUp) then gPlayer1.PressKey(KEY_UP);
+            if e_KeyPressed(KeyDown) then gPlayer1.PressKey(KEY_DOWN);
+            if e_KeyPressed(KeyFire) then gPlayer1.PressKey(KEY_FIRE);
+            if e_KeyPressed(KeyNextWeapon) then gPlayer1.PressKey(KEY_NEXTWEAPON);
+            if e_KeyPressed(KeyPrevWeapon) then gPlayer1.PressKey(KEY_PREVWEAPON);
+            if e_KeyPressed(KeyOpen) then gPlayer1.PressKey(KEY_OPEN);
           end;
       // Второй игрок:
         if gPlayer2 <> nil then
           with gGameControls.P2Control do
           begin
-            if (e_KeyBuffer[KeyLeft] = $080) and (e_KeyBuffer[KeyRight] <> $080) then
+            if e_KeyPressed(KeyLeft) and (not e_KeyPressed(KeyRight)) then
               P2MoveButton := 1 // Нажата только "Влево"
             else
-              if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] = $080) then
+              if (not e_KeyPressed(KeyLeft)) and e_KeyPressed(KeyRight) then
                 P2MoveButton := 2 // Нажата только "Вправо"
               else
-                if (e_KeyBuffer[KeyLeft] <> $080) and (e_KeyBuffer[KeyRight] <> $080) then
+                if (not e_KeyPressed(KeyLeft)) and (not e_KeyPressed(KeyRight)) then
                   P2MoveButton := 0; // Не нажаты ни "Влево", ни "Вправо"
 
           // Сейчас или раньше были нажаты "Влево"/"Вправо" => передаем игроку:
@@ -1419,11 +1421,11 @@ begin
                 gPlayer2.PressKey(KEY_RIGHT, 1000);
 
           // Раньше была нажата "Вправо", а сейчас "Влево" => бежим вправо, смотрим влево:
-            if (P2MoveButton = 2) and (e_KeyBuffer[KeyLeft] = $080) then
+            if (P2MoveButton = 2) and e_KeyPressed(KeyLeft) then
               gPlayer2.SetDirection(D_LEFT)
             else
             // Раньше была нажата "Влево", а сейчас "Вправо" => бежим влево, смотрим вправо:
-              if (P2MoveButton = 1) and (e_KeyBuffer[KeyRight] = $080) then
+              if (P2MoveButton = 1) and e_KeyPressed(KeyRight) then
                 gPlayer2.SetDirection(D_RIGHT)
               else
               // Что-то было нажато и не изменилось => куда бежим, туда и смотрим:
@@ -1431,13 +1433,13 @@ begin
                   gPlayer2.SetDirection(TDirection(P2MoveButton-1));
 
           // Остальные клавиши:
-            if e_KeyBuffer[KeyJump] = $080 then gPlayer2.PressKey(KEY_JUMP, 1000);
-            if e_KeyBuffer[KeyUp] = $080 then gPlayer2.PressKey(KEY_UP, 1000);
-            if e_KeyBuffer[KeyDown] = $080 then gPlayer2.PressKey(KEY_DOWN, 1000);
-            if e_KeyBuffer[KeyFire] = $080 then gPlayer2.PressKey(KEY_FIRE);
-            if e_KeyBuffer[KeyNextWeapon] = $080 then gPlayer2.PressKey(KEY_NEXTWEAPON);
-            if e_KeyBuffer[KeyPrevWeapon] = $080 then gPlayer2.PressKey(KEY_PREVWEAPON);
-            if e_KeyBuffer[KeyOpen] = $080 then gPlayer2.PressKey(KEY_OPEN);
+            if e_KeyPressed(KeyJump) then gPlayer2.PressKey(KEY_JUMP, 1000);
+            if e_KeyPressed(KeyUp) then gPlayer2.PressKey(KEY_UP, 1000);
+            if e_KeyPressed(KeyDown) then gPlayer2.PressKey(KEY_DOWN, 1000);
+            if e_KeyPressed(KeyFire) then gPlayer2.PressKey(KEY_FIRE);
+            if e_KeyPressed(KeyNextWeapon) then gPlayer2.PressKey(KEY_NEXTWEAPON);
+            if e_KeyPressed(KeyPrevWeapon) then gPlayer2.PressKey(KEY_PREVWEAPON);
+            if e_KeyPressed(KeyOpen) then gPlayer2.PressKey(KEY_OPEN);
           end;
       end  // if not console
       else
@@ -1452,7 +1454,7 @@ begin
     begin
       if not gSpectKeyPress then
       begin
-        if e_KeyBuffer[gGameControls.P1Control.KeyJump] = $080 then
+        if e_KeyPressed(gGameControls.P1Control.KeyJump) then
         begin
           // switch spect mode
           case gSpectMode of
@@ -1465,21 +1467,21 @@ begin
         end;
         if gSpectMode = SPECT_MAPVIEW then
         begin
-          if e_KeyBuffer[gGameControls.P1Control.KeyLeft] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyLeft) then
             gSpectX := Max(gSpectX - gSpectStep, 0);
-          if e_KeyBuffer[gGameControls.P1Control.KeyRight] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyRight) then
             gSpectX := Min(gSpectX + gSpectStep, gMapInfo.Width - gScreenWidth);
-          if e_KeyBuffer[gGameControls.P1Control.KeyUp] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyUp) then
             gSpectY := Max(gSpectY - gSpectStep, 0);
-          if e_KeyBuffer[gGameControls.P1Control.KeyDown] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyDown) then
             gSpectY := Min(gSpectY + gSpectStep, gMapInfo.Height - gScreenHeight);
-          if e_KeyBuffer[gGameControls.P1Control.KeyPrevWeapon] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyPrevWeapon) then
           begin
             // decrease step
             if gSpectStep > 4 then gSpectStep := gSpectStep shr 1;
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyNextWeapon] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyNextWeapon) then
           begin
             // increase step
             if gSpectStep < 64 then gSpectStep := gSpectStep shl 1;
@@ -1488,37 +1490,37 @@ begin
         end;
         if gSpectMode = SPECT_PLAYERS then
         begin
-          if e_KeyBuffer[gGameControls.P1Control.KeyUp] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyUp) then
           begin
             // add second view
             gSpectViewTwo := True;
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyDown] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyDown) then
           begin
             // remove second view
             gSpectViewTwo := False;
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyLeft] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyLeft) then
           begin
             // prev player (view 1)
             gSpectPID1 := GetActivePlayerID_Prev(gSpectPID1);
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyRight] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyRight) then
           begin
             // next player (view 1)
             gSpectPID1 := GetActivePlayerID_Next(gSpectPID1);
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyPrevWeapon] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyPrevWeapon) then
           begin
             // prev player (view 2)
             gSpectPID2 := GetActivePlayerID_Prev(gSpectPID2);
             gSpectKeyPress := True;
           end;
-          if e_KeyBuffer[gGameControls.P1Control.KeyNextWeapon] = $080 then
+          if e_KeyPressed(gGameControls.P1Control.KeyNextWeapon) then
           begin
             // next player (view 2)
             gSpectPID2 := GetActivePlayerID_Next(gSpectPID2);
@@ -1527,13 +1529,13 @@ begin
         end;
       end
       else
-        if (e_KeyBuffer[gGameControls.P1Control.KeyJump] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyLeft] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyRight] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyUp] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyDown] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyPrevWeapon] <> $080) and
-           (e_KeyBuffer[gGameControls.P1Control.KeyNextWeapon] <> $080) then
+        if (not e_KeyPressed(gGameControls.P1Control.KeyJump)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyLeft)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyRight)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyUp)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyDown)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyPrevWeapon)) and
+           (not e_KeyPressed(gGameControls.P1Control.KeyNextWeapon)) then
           gSpectKeyPress := False;
     end;
 
@@ -1638,13 +1640,13 @@ begin
 // Активно окно интерфейса - передаем клавиши ему:
   if g_ActiveWindow <> nil then
   begin
-    for a := 0 to 255 do
-      if e_KeyBuffer[a] = $080 then
+    w := e_GetFirstKeyPressed();
+
+    if (w <> e_WrongKey) then
       begin
         Msg.Msg := MESSAGE_DIKEY;
-        Msg.wParam := a;
+        Msg.wParam := w;
         g_ActiveWindow.OnMessage(Msg);
-        Break;
       end;
 
   // Если оно от этого не закрылось, то обновляем:
@@ -1671,7 +1673,7 @@ begin
   end;
 
 // Делаем скриншот (не чаще 200 миллисекунд):
-  if e_KeyBuffer[gGameControls.GameControls.TakeScreenshot] = $080 then
+  if e_KeyPressed(gGameControls.GameControls.TakeScreenshot) then
     if (GetTimer()-LastScreenShot) > 200000 then
     begin
       g_TakeScreenShot();
@@ -1679,7 +1681,7 @@ begin
     end;
 
 // Горячая клавиша для вызова меню выхода из игры (F10):
-  if (e_KeyBuffer[DIK_F10] = $080) and
+  if e_KeyPressed(DIK_F10) and
      gGameOn and
      (not gConsoleShow) and
      (g_ActiveWindow = nil) then
@@ -1788,8 +1790,8 @@ var
 begin
   e_TextureFontGetSize(gStdFont, ww2, hh2);
 
-  e_PollKeyboard;
-  if (e_KeyBuffer[$0F] = $080) then
+  e_PollInput();
+  if e_KeyPressed(e_IKey_Tab) then
   begin
     if not gStatsPressed then
     begin
@@ -3504,8 +3506,9 @@ begin
 
     ProcessLoading();
 
-    e_PollKeyboard();
-    if (e_KeyBuffer[1] = $080) or (e_KeyBuffer[57] = $080) then
+    e_PollInput();
+    
+    if e_KeyPressed(e_IKey_Escape) or e_KeyPressed(e_IKey_Space) then
     begin
       State := 0;
       break;
@@ -4644,6 +4647,11 @@ begin
         g_debug_Player := (P[1][1] = '1');
 
       g_Console_Add(Format(cmd + ' is %d', [Byte(g_Debug_Player)]));
+    end
+    else if (cmd = 'd_joy') then
+    begin
+      for a := 1 to 8 do
+        g_Console_Add(e_JoystickStateToString(a));
     end;
   end
     else

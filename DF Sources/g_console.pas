@@ -364,6 +364,7 @@ begin
   AddCommand('d_monster', DebugCommands);
   AddCommand('d_health', DebugCommands);
   AddCommand('d_player', DebugCommands);
+  AddCommand('d_joy', DebugCommands);
 
   AddCommand('p1_name', GameCVars);
   AddCommand('p2_name', GameCVars);

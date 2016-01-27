@@ -4,7 +4,7 @@ interface
 
 uses
   Windows,
-  e_graphics, g_playermodel, g_basic, MAPSTRUCT, WADEDITOR;
+  e_graphics, e_input, g_playermodel, g_basic, MAPSTRUCT, WADEDITOR;
 
 const
   MAINMENU_HEADER_COLOR: TRGB = (R:255; G:255; B:255);
@@ -257,14 +257,14 @@ type
   private
     FFont: TFont;
     FColor: TRGB;
-    FKey: Byte;
+    FKey: Word;
     FIsQuery: Boolean;
   public
     constructor Create(FontID: DWORD);
     procedure OnMessage(var Msg: TMessage); override;
     procedure Draw; override;
     function GetWidth(): Word;
-    property Key: Byte read FKey write FKey;
+    property Key: Word read FKey write FKey;
     property Color: TRGB read FColor write FColor;
     property Font: TFont read FFont write FFont;
   end;
@@ -473,7 +473,7 @@ type
   end;
 
 var
-  KEYTABLE: array[0..255] of string = (
+  KEYTABLE: array[0..e_MaxInputKeys] of string = (
     '', 'ESC', '1', '2', '3', '4', '5', '6',  // 0
     '7', '8', '9', '0', '-', '=', 'BackSpace', 'Tab',  // 8
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',  // 16
@@ -505,7 +505,20 @@ var
     '', '', '', '', '', '', '', '',  // 224
     '', '', '', '', '', '', '', '',  // 232
     '', '', '', '', '', '', '', '',  // 240
-    '', '', '', '', '', '', '', ''); // 248
+    '', '', '', '', '', '', '', '',  // 248
+    'Joy 1', 'Joy 2', 'Joy 3', 'Joy 4',      // 256
+    'Joy 5', 'Joy 6', 'Joy 7', 'Joy 8',      // 260
+    'Joy 9', 'Joy 10', 'Joy 11', 'Joy 12',   // 264
+    'Joy 13', 'Joy 14', 'Joy 15', 'Joy 16',  // 268
+    'Joy 17', 'Joy 18', 'Joy 19', 'Joy 20',  // 272
+    'Joy 21', 'Joy 22', 'Joy 23', 'Joy 24',  // 276
+    'Joy 25', 'Joy 26', 'Joy 27', 'Joy 28',  // 280
+    'Joy 29', 'Joy 30', 'Joy 31', 'Joy 32',  // 284
+    'X-', 'X+', 'Y-', 'Y+',                          // 288
+    'Z-', 'Z+', 'RX-', 'RX+',                        // 292
+    'RY-', 'RY+', 'RZ-', 'RZ+',                      // 296
+    'Slider1-', 'Slider1+', 'Slider2-', 'Slider2+'); // 300 .. 303
+
 
 var
   g_GUIWindows: array of TGUIWindow;
@@ -2229,7 +2242,7 @@ begin
                 end
               else
                 begin
-                  FKey := 28; // <Enter>
+                  FKey := e_IKey_Enter; // <Enter>
                   FIsQuery := False;
                   
                   with FWindow do
@@ -2242,7 +2255,7 @@ begin
         end;
 
       MESSAGE_DIKEY:
-        if FIsQuery and (wParam <> 28) then
+        if FIsQuery and (wParam <> e_IKey_Enter) then // Not <Enter
         begin
           if KEYTABLE[wParam] <> '' then
             FKey := wParam;

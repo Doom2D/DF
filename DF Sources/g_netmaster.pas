@@ -480,10 +480,12 @@ end;
 
 procedure g_Serverlist_Control(var SL: TNetServerList);
 begin
-  if gConsoleShow or gChatShow then Exit;
-  e_PollKeyboard;
+  if gConsoleShow or gChatShow then
+    Exit;
 
-  if (e_KeyBuffer[1] = $080) then
+  e_PollInput();
+
+  if e_KeyPressed(e_IKey_Escape) then
   begin
     SL := nil;
     gState := STATE_MENU;
@@ -494,7 +496,7 @@ begin
     Exit;
   end;
 
-  if (e_KeyBuffer[57] = $080) then
+  if e_KeyPressed(e_IKey_Space) then
   begin
     if not slFetched then
     begin
@@ -519,7 +521,7 @@ begin
 
   if SL = nil then Exit;
 
-  if (e_KeyBuffer[$1C] = $080) then
+  if e_KeyPressed(e_IKey_Enter) then
   begin
     if not slReturnPressed then
     begin
@@ -543,7 +545,7 @@ begin
   else
     slReturnPressed := False;
 
-  if (e_KeyBuffer[$D0] = $080) then
+  if e_KeyPressed(e_IKey_Down) then
   begin
     if not slDirPressed then
     begin
@@ -552,7 +554,8 @@ begin
       slDirPressed := True;
     end;
   end;
-  if (e_KeyBuffer[$C8] = $080) then
+  
+  if e_KeyPressed(e_IKey_Up) then
   begin
     if not slDirPressed then
     begin
@@ -563,7 +566,7 @@ begin
     end;
   end;
 
-  if (e_KeyBuffer[$D0] <> $080) and (e_KeyBuffer[$C8] <> $080) then
+  if (not e_KeyPressed(e_IKey_Down)) and (not e_KeyPressed(e_IKey_Up)) then
     slDirPressed := False;
 end;
 

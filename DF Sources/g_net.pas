@@ -743,9 +743,12 @@ begin
         Exit;
       end;
     end;
+
     ProcessLoading();
-    e_PollKeyboard();
-    if (e_KeyBuffer[1] = $080) or (e_KeyBuffer[57] = $080) then
+    
+    e_PollInput();
+
+    if e_KeyPressed(e_IKey_Escape) or e_KeyPressed(e_IKey_Space) then
       OuterLoop := False;
   end;
 
@@ -756,7 +759,7 @@ begin
     enet_host_destroy(NetHost);
     NetHost := nil;
   end;
-  g_Net_Cleanup;
+  g_Net_Cleanup();
   Result := False;
 end;
 
@@ -911,8 +914,9 @@ begin
 
     ProcessLoading();
 
-    e_PollKeyboard();
-    if (e_KeyBuffer[1] = $080) or (e_KeyBuffer[57] = $080) then
+    e_PollInput();
+
+    if e_KeyPressed(e_IKey_Escape) or e_KeyPressed(e_IKey_Space) then
       break;
   end;
   Result := msgStream;

@@ -65,6 +65,11 @@ begin
   e_WriteLog('Init DirectInput', MSG_NOTIFY);
   e_InitDirectInput(h_Wnd);
 
+  if (e_JoystickAvailable) then
+    e_WriteLog('DirectInput: Joystick available.', MSG_NOTIFY)
+  else
+    e_WriteLog('DirectInput: No Joystick.', MSG_NOTIFY);
+
   e_WriteLog('Init FMOD', MSG_NOTIFY);
   e_InitSoundSystem(48000); 
 
@@ -223,10 +228,12 @@ begin
   // ÏÎØÅËÍÀ ïîñûëàåò íà íóæíûé óğîâåíü
   ls1 :=          CheatEng[I_GAME_CHEAT_CHANGEMAP];
   ls2 := Translit(CheatRus[I_GAME_CHEAT_CHANGEMAP]);
-  if (Copy(charbuff, 17 - Length(ls1), Length(ls1)) = ls1) or
-     (Copy(charbuff, 17 - Length(ls2), Length(ls2)) = ls2) then
+  s2 := Copy(charbuff, 15, 2);
+  if ((Copy(charbuff, 15 - Length(ls1), Length(ls1)) = ls1) or
+      (Copy(charbuff, 15 - Length(ls2), Length(ls2)) = ls2))
+     and (s2[1] >= '0') and (s2[1] <= '9')
+     and (s2[2] >= '0') and (s2[2] <= '9') then
   begin
-    s2 := Copy(charbuff, 15, 2);
     if g_Map_Exist(MapsDir+gGameSettings.WAD+':\MAP'+s2) then
     begin
       c := 'MAP00';
