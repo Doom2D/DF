@@ -58,6 +58,7 @@ type
     FWeaponPoints:     TWeaponPoints;
     FPainSounds:       TModelSoundArray;
     FDieSounds:        TModelSoundArray;
+    FSlopSound:        Byte;
     FCurrentWeapon:    Byte;
     FDrawWeapon:       Boolean;
     FFlag:             Byte;
@@ -113,6 +114,7 @@ type
     Gibs:         TGibsArray;
     PainSounds:   TModelSoundArray;
     DieSounds:    TModelSoundArray;
+    SlopSound:    Byte;
   end;
 
 const
@@ -332,7 +334,7 @@ begin
       begin
         SetLength(PainSounds, Length(PainSounds)+1);
         g_Sound_CreateWAD(PainSounds[High(PainSounds)].ID, prefix+s);
-        PainSounds[High(PainSounds)].Level := config.ReadInt('Sound', 'painlevel'+IntToStr(a), 1); 
+        PainSounds[High(PainSounds)].Level := config.ReadInt('Sound', 'painlevel'+IntToStr(a), 1);
       end;
       a := a+1;
     until s = '';
@@ -344,10 +346,12 @@ begin
       begin
         SetLength(DieSounds, Length(DieSounds)+1);
         g_Sound_CreateWAD(DieSounds[High(DieSounds)].ID, prefix+s);
-        DieSounds[High(DieSounds)].Level := config.ReadInt('Sound', 'dielevel'+IntToStr(a), 1); 
+        DieSounds[High(DieSounds)].Level := config.ReadInt('Sound', 'dielevel'+IntToStr(a), 1);
       end;
       a := a+1;
     until s = '';
+
+    SlopSound := Min(Max(config.ReadInt('Sound', 'slop', 1), 0), 2);
 
     SetLength(Gibs, ReadInt('Gibs', 'count', 0));
 
@@ -449,9 +453,10 @@ begin
 
           Result.FMaskAnim[D_LEFT][b] := TAnimation.Create(ID2, b in [A_STAND, A_WALK], ModelSpeed[b]);
         end;
-     
+
         Result.FPainSounds := PainSounds;
         Result.FDieSounds := DieSounds;
+        Result.FSlopSound := SlopSound;
       end;
 
       Result.FDrawWeapon := Info.HaveWeapon;
@@ -459,7 +464,7 @@ begin
 
       Result.FFlagPoint := FlagPoint;
       Result.FFlagAngle := FlagAngle;
-    
+
       Break;
     end;
   end;
@@ -760,7 +765,7 @@ var
   a: Integer;
 begin
   Result := False;
- 
+
   if SoundType = MODELSOUND_PAIN then
   begin
     if FPainSounds = nil then Exit;
@@ -774,6 +779,15 @@ begin
   end
   else
   begin
+    if (Level in [2, 3]) and (FSlopSound > 0) then
+    begin
+      g_Sound_PlayExAt('SOUND_MONSTER_SLOP', X, Y);
+      if FSlopSound = 1 then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
     if FDieSounds = nil then Exit;
 
     for a := 0 to High(FDieSounds) do
@@ -788,7 +802,7 @@ begin
 
   g_Sound_PlayAt(TempArray[Random(Length(TempArray))], X, Y);
 
-  Result := True; 
+  Result := True;
 end;
 
 procedure TPlayerModel.SetColor(Red, Green, Blue: Byte);

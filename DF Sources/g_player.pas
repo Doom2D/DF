@@ -5632,6 +5632,8 @@ begin
 end;
 
 procedure TCorpse.Damage(Value: Word; vx, vy: Integer);
+var
+  pm: TPlayerModel;
 begin
   if FState = CORPSE_STATE_REMOVEME then
     Exit;
@@ -5650,7 +5652,9 @@ begin
         g_Player_CreateGibs(FObj.X+FObj.Rect.X+(FObj.Rect.Width div 2),
                             FObj.Y+FObj.Rect.Y+(FObj.Rect.Height div 2),
                             FModelName, FColor);
-        g_Sound_PlayExAt('SOUND_MONSTER_SLOP', FObj.X, FObj.Y);
+        pm := g_PlayerModel_Get(FModelName);
+        pm.PlaySound(MODELSOUND_DIE, 3, FObj.X, FObj.Y);
+        pm.Free;
       end;
     end
   else
