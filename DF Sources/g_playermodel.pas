@@ -351,7 +351,7 @@ begin
       a := a+1;
     until s = '';
 
-    SlopSound := Min(Max(config.ReadInt('Sound', 'slop', 1), 0), 2);
+    SlopSound := Min(Max(config.ReadInt('Sound', 'slop', 0), 0), 2);
 
     SetLength(Gibs, ReadInt('Gibs', 'count', 0));
 

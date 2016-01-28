@@ -144,7 +144,6 @@ procedure g_Monsters_Draw();
 procedure g_Monsters_DrawHealth();
 function  g_Monsters_Get(UID: Word): TMonster;
 procedure g_Monsters_killedp();
-procedure g_Monsters_goodsnd();
 procedure g_Monsters_SaveState(var Mem: TBinMemoryWriter);
 procedure g_Monsters_LoadState(var Mem: TBinMemoryReader);
 function  g_Monsters_GetIDByName(name: String): Integer;
@@ -363,7 +362,6 @@ const
   MAX_SOUL = 512; // Ограничение Lost_Soul'ов
 
 var
-  gsnd: Array [0..3] of TPlayableSound;
   pt_x: Integer = 0;
   pt_xs: Integer = 1;
   pt_y: Integer = 0;
@@ -726,21 +724,6 @@ begin
   g_Sound_CreateWADEx('SOUND_MONSTER_SPIDER_WALK', GameWAD+':MSOUNDS\SPIDER_WALK');
 
   g_Sound_CreateWADEx('SOUND_MONSTER_FISH_ATTACK', GameWAD+':MSOUNDS\FISH_ATTACK');
-
-  g_Sound_CreateWADEx('SOUND_GOOD1', GameWAD+':SOUNDS\GOOD1');
-  g_Sound_CreateWADEx('SOUND_GOOD2', GameWAD+':SOUNDS\GOOD2');
-  g_Sound_CreateWADEx('SOUND_GOOD3', GameWAD+':SOUNDS\GOOD3');
-  g_Sound_CreateWADEx('SOUND_GOOD4', GameWAD+':SOUNDS\GOOD4');
-
-  gsnd[0] := TPlayableSound.Create();
-  gsnd[1] := TPlayableSound.Create();
-  gsnd[2] := TPlayableSound.Create();
-  gsnd[3] := TPlayableSound.Create();
-
-  gsnd[0].SetByName('SOUND_GOOD1');
-  gsnd[1].SetByName('SOUND_GOOD2');
-  gsnd[2].SetByName('SOUND_GOOD3');
-  gsnd[3].SetByName('SOUND_GOOD4');
 end;
 
 procedure g_Monsters_FreeData();
@@ -955,16 +938,6 @@ begin
   g_Sound_Delete('SOUND_MONSTER_SPIDER_WALK');
 
   g_Sound_Delete('SOUND_MONSTER_FISH_ATTACK');
-
-  gsnd[0].Free();
-  gsnd[1].Free();
-  gsnd[2].Free();
-  gsnd[3].Free();
-
-  g_Sound_Delete('SOUND_GOOD1');
-  g_Sound_Delete('SOUND_GOOD2');
-  g_Sound_Delete('SOUND_GOOD3');
-  g_Sound_Delete('SOUND_GOOD4');
 end;
 
 procedure g_Monsters_Init();
@@ -1048,17 +1021,6 @@ begin
           g_Sound_PlayExAt('SOUND_MONSTER_TRUP', FObj.X, FObj.Y);
           Exit;
         end;
-end;
-
-procedure g_Monsters_goodsnd();
-var
-  a: Integer;
-begin
-  for a := 0 to 3 do
-    if gsnd[a].IsPlaying() then
-      Exit;
-
-  gsnd[Random(4)].Play();
 end;
 
 procedure g_Monsters_Update();
@@ -1663,6 +1625,7 @@ begin
             p.MonsterKills := p.MonsterKills+1;
             if gGameSettings.GameMode = GM_COOP then
               p.Frags := p.Frags + 1;
+            p.FragCombo();
           end;
         end;
         if gLMSRespawn = LMS_RESPAWN_NONE then

@@ -647,7 +647,8 @@ var
             begin
               gPlayers[i].Push((obj^.Vel.X+obj^.Accel.X)*IfThen(t = HIT_BFG, 8, 1) div 4,
                                (obj^.Vel.Y+obj^.Accel.Y)*IfThen(t = HIT_BFG, 8, 1) div 4);
-              if t = HIT_BFG then g_Monsters_goodsnd();
+              if t = HIT_BFG then
+                g_Game_DelayEvent(DE_BFGHIT, 1000, SpawnerUID);
               Result := True;
               break;
             end;

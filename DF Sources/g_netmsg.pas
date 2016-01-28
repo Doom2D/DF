@@ -91,7 +91,8 @@ const
   NET_EV_TLMS_WIN     = 14;
   NET_EV_LMS_LOSE     = 15;
   NET_EV_LMS_DRAW     = 16;
-  NET_EV_PLAYER_TOUCH = 17;
+  NET_EV_KILLCOMBO    = 17;
+  NET_EV_PLAYER_TOUCH = 18;
 
   NET_VE_STARTED      = 1;
   NET_VE_PASSED       = 2;
@@ -1735,6 +1736,9 @@ begin
 
     NET_EV_LMS_DRAW:
       g_Game_Message(_lc[I_GAME_WIN_DRAW], 144);
+
+    NET_EV_KILLCOMBO:
+      g_Game_Announce_KillCombo(EvStr, EvNum);
 
     NET_EV_PLAYER_TOUCH:
     begin

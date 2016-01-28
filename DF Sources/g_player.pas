@@ -126,6 +126,9 @@ type
     FKills:     Integer;
     FMonsterKills: Integer;
     FFrags:     Integer;
+    FFragCombo: Byte;
+    FLastFrag:  LongWord;
+    FComboEvnt: Integer;
     FDeath:     Integer;
     FCanJetpack: Boolean;
     FJetFuel:   Integer;
@@ -239,6 +242,7 @@ type
     procedure   SetFlag(Flag: Byte);
     function    DropFlag(): Boolean;
     procedure   AllRulez(Health: Boolean);
+    procedure   FragCombo();
     procedure   GiveItem(ItemType: Byte);
     procedure   Damage(value: Word; SpawnerUID: Word; vx, vy: Integer; t: Byte); virtual;
     function    Heal(value: Word; Soft: Boolean): Boolean; virtual;
@@ -760,6 +764,10 @@ begin
   Mem.ReadInt(gPlayers[a].FMonsterKills);
 // Фрагов:
   Mem.ReadInt(gPlayers[a].FFrags);
+// Фрагов подряд:
+  Mem.ReadByte(gPlayers[a].FFragCombo);
+// Время последнего фрага:
+  Mem.ReadDWORD(gPlayers[a].FLastFrag);
 // Смертей:
   Mem.ReadInt(gPlayers[a].FDeath);
 // Какой флаг несет:
@@ -2899,7 +2907,10 @@ begin
   if SpawnerUID = FUID then
     begin // Самоубился
       if Srv and (DoFrags or (gGameSettings.GameMode = GM_TDM)) then
+      begin
         Dec(FFrags);
+        FLastFrag := 0;
+      end;
       g_Console_Add(Format(_lc[I_PLAYER_KILL_SELF], [FName]), True);
     end
   else
@@ -2909,8 +2920,15 @@ begin
         if (KP <> nil) and Srv then
         begin
           if (DoFrags or (gGameSettings.GameMode = GM_TDM)) then
-            Inc(KP.FFrags,
-              IfThen(SameTeam(FUID, SpawnerUID), -1, 1));
+            if SameTeam(FUID, SpawnerUID) then
+            begin
+              Dec(KP.FFrags);
+              KP.FLastFrag := 0;
+            end else
+            begin
+              Inc(KP.FFrags);
+              KP.FragCombo();
+            end;
 
           if (gGameSettings.GameMode = GM_TDM) and DoFrags then
             Inc(gTeamStat[KP.Team].Goals,
@@ -3654,7 +3672,7 @@ procedure TPlayer.Touch();
 begin
   if not FLive then
     Exit;
-  FModel.PlaySound(MODELSOUND_PAIN, 1, FObj.X, FObj.Y);
+  //FModel.PlaySound(MODELSOUND_PAIN, 1, FObj.X, FObj.Y);
   if FIamBot then
   begin
   // Бросить флаг товарищу:
@@ -3685,6 +3703,8 @@ begin
   FNoTarget := False;
   FNoReload := False;
   FFrags := 0;
+  FLastFrag := 0;
+  FComboEvnt := -1;
   FKills := 0;
   FMonsterKills := 0;
   FDeath := 0;
@@ -3712,6 +3732,8 @@ begin
   FShellTimer := -1;
   FPain := 0;
   FLastHit := 0;
+  FLastFrag := 0;
+  FComboEvnt := -1;
 
   SetFlag(FLAG_NONE);
   SetAction(A_STAND, True);
@@ -5308,6 +5330,10 @@ begin
   Mem.WriteInt(FMonsterKills);
 // Фрагов:
   Mem.WriteInt(FFrags);
+// Фрагов подряд:
+  Mem.WriteByte(FFragCombo);
+// Время последнего фрага:
+  Mem.WriteDWORD(FLastFrag);
 // Смертей:
   Mem.WriteInt(FDeath);
 // Какой флаг несет:
@@ -5440,6 +5466,10 @@ begin
   Mem.ReadInt(FMonsterKills);
 // Фрагов:
   Mem.ReadInt(FFrags);
+// Фрагов подряд:
+  Mem.ReadByte(FFragCombo);
+// Время последнего фрага:
+  Mem.ReadDWORD(FLastFrag);
 // Смертей:
   Mem.ReadInt(FDeath);
 // Какой флаг несет:
@@ -5534,6 +5564,32 @@ begin
   for a := WEAPON_KASTET to WEAPON_SUPERPULEMET do FWeapon[a] := True;
   for a := A_BULLETS to A_CELLS do FAmmo[a] := 30000;
   FRulez := FRulez+[R_KEY_RED, R_KEY_GREEN, R_KEY_BLUE];
+end;
+
+procedure TPlayer.FragCombo();
+begin
+  if (gGameSettings.GameMode = GM_SINGLE) or g_Game_IsClient then
+    Exit;
+  if gTime - FLastFrag < 5000 then
+  begin
+    if FFragCombo < 5 then
+      Inc(FFragCombo);
+    if (FComboEvnt >= Low(gDelayedEvents)) and
+       (FComboEvnt <= High(gDelayedEvents)) and
+       gDelayedEvents[FComboEvnt].Pending and
+       (gDelayedEvents[FComboEvnt].DEType = DE_KILLCOMBO) and
+       (gDelayedEvents[FComboEvnt].DEStr = FName) then
+    begin
+      gDelayedEvents[FComboEvnt].Time := gTime + 500;
+      gDelayedEvents[FComboEvnt].DENum := FFragCombo;
+    end
+    else
+      FComboEvnt := g_Game_DelayEvent(DE_KILLCOMBO, 500, FFragCombo, FName);
+  end
+  else
+    FFragCombo := 1;
+
+  FLastFrag := gTime;
 end;
 
 procedure TPlayer.GiveItem(ItemType: Byte);

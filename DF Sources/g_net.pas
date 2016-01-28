@@ -6,7 +6,7 @@ uses
   e_log, e_fixedbuffer, ENet, ENet_Types, ENet_Win32, Classes;
 
 const
-  NET_PROTOCOL_VER = 160;
+  NET_PROTOCOL_VER = 161;
 
   NET_MAXCLIENTS = 24;
   NET_CHANS = 11;

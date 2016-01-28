@@ -16,11 +16,19 @@ type
     MaxLives: Byte;
     Options: LongWord;
     WAD: String;
-  end;                                          
+  end;
 
   TGameEvent = record
     Name: String;
     Command: String;
+  end;
+
+  TDelayedEvent = record
+    Pending: Boolean;
+    Time: LongWord;
+    DEType: Byte;
+    DENum: Integer;
+    DEStr: String;
   end;
 
   TPlayerSettings = record
@@ -57,6 +65,7 @@ procedure g_Game_ChangeResolution(newWidth, newHeight: Word; nowFull, nowMax: Bo
 function  g_Game_ModeToText(Mode: Byte): string;
 function  g_Game_TextToMode(Mode: string): Byte;
 procedure g_Game_ExecuteEvent(Name: String);
+function  g_Game_DelayEvent(DEType: Byte; Time: LongWord; Num: Integer = 0; Str: String = ''): Integer;
 procedure g_Game_AddPlayer(Team: Byte = TEAM_NONE);
 procedure g_Game_RemovePlayer();
 procedure g_Game_Spectate();
@@ -84,6 +93,7 @@ procedure g_Game_PauseAllSounds(Enable: Boolean);
 procedure g_Game_StopAllSounds(all: Boolean);
 procedure g_Game_UpdateTriggerSounds();
 function  g_Game_GetMegaWADInfo(WAD: String): TMegaWADInfo;
+procedure g_Game_Announce_KillCombo(Name: String; Count: Byte);
 procedure g_Game_StartVote(Command, Initiator: string);
 procedure g_Game_CheckVote;
 procedure g_TakeScreenShot();
@@ -157,6 +167,10 @@ const
   SPECT_MAPVIEW = 2;
   SPECT_PLAYERS = 3;
 
+  DE_GLOBEVENT = 0;
+  DE_BFGHIT    = 1;
+  DE_KILLCOMBO = 2;
+
   CONFIG_FILENAME = 'Doom2DF.cfg';
   LOG_FILENAME = 'Doom2DF.log';
 
@@ -181,6 +195,8 @@ var
   gHearPoint1, gHearPoint2: THearPoint;
   gSoundEffectsDF: Boolean = False;
   gSoundTriggerTime: Word = 0;
+  goodsnd: array[0..3] of TPlayableSound;
+  killsnd: array[0..3] of TPlayableSound;
   gDefInterTime: ShortInt = -1;
   gInterEndTime: LongWord = 0;
   gInterTime: LongWord = 0;
@@ -255,6 +271,7 @@ var
   gVoted: Boolean = False;
   gVotesEnabled: Boolean = True;
   gEvents: Array of TGameEvent;
+  gDelayedEvents: Array of TDelayedEvent;
 
   P1MoveButton: Byte = 0;
   P2MoveButton: Byte = 0;
@@ -601,6 +618,34 @@ begin
         g_Console_Process(gEvents[a].Command, True);
       break;
     end;
+end;
+
+function g_Game_DelayEvent(DEType: Byte; Time: LongWord; Num: Integer = 0; Str: String = ''): Integer;
+var
+  a, n: Integer;
+begin
+  n := -1;
+  if gDelayedEvents <> nil then
+    for a := 0 to High(gDelayedEvents) do
+      if not gDelayedEvents[a].Pending then
+      begin
+        n := a;
+        break;
+      end;
+  if n = -1 then
+  begin
+    SetLength(gDelayedEvents, Length(gDelayedEvents) + 1);
+    n := High(gDelayedEvents);
+  end;
+  gDelayedEvents[n].Pending := True;
+  gDelayedEvents[n].DEType := DEType;
+  gDelayedEvents[n].DENum := Num;
+  gDelayedEvents[n].DEStr := Str;
+  if DEType = DE_GLOBEVENT then
+    gDelayedEvents[n].Time := (GetTimer() div 1000) + Time
+  else
+    gDelayedEvents[n].Time := gTime + Time;
+  Result := n;
 end;
 
 procedure EndGame();
@@ -1127,6 +1172,7 @@ var
   a: Byte;
   w: Word;
   i, b: Integer;
+  snd: Boolean;
 begin
 // Пора выключать игру:
   if gExit = EXIT_QUIT then
@@ -1141,7 +1187,7 @@ begin
 
 // Читаем клавиатуру и джойстик, если окно активно:
   e_PollInput();
-  
+
 // Обновляем консоль (движение и сообщения):
   g_Console_Update();
 
@@ -1689,8 +1735,46 @@ begin
     KeyPress(VK_F10);
   end;
 
-// Каждую секунду обновляем счетчик обновлений:
   Time := GetTimer() div 1000;
+
+// Обработка отложенных событий:
+  if gDelayedEvents <> nil then
+    for a := 0 to High(gDelayedEvents) do
+      if gDelayedEvents[a].Pending and
+      (
+        ((gDelayedEvents[a].DEType = DE_GLOBEVENT) and (gDelayedEvents[a].Time <= Time)) or
+        ((gDelayedEvents[a].DEType > DE_GLOBEVENT) and (gDelayedEvents[a].Time <= gTime))
+      ) then
+      begin
+        case gDelayedEvents[a].DEType of
+          DE_GLOBEVENT:
+            g_Game_ExecuteEvent(gDelayedEvents[a].DEStr);
+          DE_BFGHIT:
+            if gGameOn then
+            begin
+              snd := True;
+              for b := 0 to 3 do
+                if goodsnd[b].IsPlaying() then
+                begin
+                  snd := False;
+                  break;
+                end;
+              // TODO: check SpawnerUID with gDelayedEvents[a].DENum
+              if snd then
+                goodsnd[Random(4)].Play();
+            end;
+          DE_KILLCOMBO:
+            if gGameOn then
+            begin
+              g_Game_Announce_KillCombo(gDelayedEvents[a].DEStr, gDelayedEvents[a].DENum);
+              if g_Game_IsNet and g_Game_IsServer then
+                MH_SEND_GameEvent(NET_EV_KILLCOMBO, gDelayedEvents[a].DENum, gDelayedEvents[a].DEStr);
+            end;
+        end;
+        gDelayedEvents[a].Pending := False;
+      end;
+
+// Каждую секунду обновляем счетчик обновлений:
   UPSCounter := UPSCounter + 1;
   if Time - UPSTime >= 1000 then
   begin
@@ -1731,6 +1815,34 @@ begin
   g_Sound_CreateWADEx('SOUND_GAME_SWITCH1', GameWAD+':SOUNDS\SWITCH1');
   g_Sound_CreateWADEx('SOUND_GAME_SWITCH0', GameWAD+':SOUNDS\SWITCH0');
   g_Sound_CreateWADEx('SOUND_GAME_RADIO', GameWAD+':SOUNDS\RADIO');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_GOOD1', GameWAD+':SOUNDS\GOOD1');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_GOOD2', GameWAD+':SOUNDS\GOOD2');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_GOOD3', GameWAD+':SOUNDS\GOOD3');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_GOOD4', GameWAD+':SOUNDS\GOOD4');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_KILL2X', GameWAD+':SOUNDS\KILL2X');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_KILL3X', GameWAD+':SOUNDS\KILL3X');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_KILL4X', GameWAD+':SOUNDS\KILL4X');
+  g_Sound_CreateWADEx('SOUND_ANNOUNCER_KILLMX', GameWAD+':SOUNDS\KILLMX');
+
+  goodsnd[0] := TPlayableSound.Create();
+  goodsnd[1] := TPlayableSound.Create();
+  goodsnd[2] := TPlayableSound.Create();
+  goodsnd[3] := TPlayableSound.Create();
+
+  goodsnd[0].SetByName('SOUND_ANNOUNCER_GOOD1');
+  goodsnd[1].SetByName('SOUND_ANNOUNCER_GOOD2');
+  goodsnd[2].SetByName('SOUND_ANNOUNCER_GOOD3');
+  goodsnd[3].SetByName('SOUND_ANNOUNCER_GOOD4');
+
+  killsnd[0] := TPlayableSound.Create();
+  killsnd[1] := TPlayableSound.Create();
+  killsnd[2] := TPlayableSound.Create();
+  killsnd[3] := TPlayableSound.Create();
+
+  killsnd[0].SetByName('SOUND_ANNOUNCER_KILL2X');
+  killsnd[1].SetByName('SOUND_ANNOUNCER_KILL3X');
+  killsnd[2].SetByName('SOUND_ANNOUNCER_KILL4X');
+  killsnd[3].SetByName('SOUND_ANNOUNCER_KILLMX');
 
   g_Game_SetLoadingText(_lc[I_LOAD_ITEMS_DATA], 0, False);
   g_Items_LoadData();
@@ -1775,6 +1887,26 @@ begin
   g_Sound_Delete('SOUND_GAME_BUBBLE2');
   g_Sound_Delete('SOUND_GAME_SWITCH1');
   g_Sound_Delete('SOUND_GAME_SWITCH0');
+
+  goodsnd[0].Free();
+  goodsnd[1].Free();
+  goodsnd[2].Free();
+  goodsnd[3].Free();
+
+  g_Sound_Delete('SOUND_ANNOUNCER_GOOD1');
+  g_Sound_Delete('SOUND_ANNOUNCER_GOOD2');
+  g_Sound_Delete('SOUND_ANNOUNCER_GOOD3');
+  g_Sound_Delete('SOUND_ANNOUNCER_GOOD4');
+
+  killsnd[0].Free();
+  killsnd[1].Free();
+  killsnd[2].Free();
+  killsnd[3].Free();
+
+  g_Sound_Delete('SOUND_ANNOUNCER_KILL2X');
+  g_Sound_Delete('SOUND_ANNOUNCER_KILL3X');
+  g_Sound_Delete('SOUND_ANNOUNCER_KILL4X');
+  g_Sound_Delete('SOUND_ANNOUNCER_KILLMX');
 
   DataLoaded := False;
 end;
@@ -5752,6 +5884,35 @@ procedure g_Game_Message(Msg: string; Time: Word);
 begin
   MessageText := b_Text_Format(Msg);
   MessageTime := Time;
+end;
+
+procedure g_Game_Announce_KillCombo(Name: String; Count: Byte);
+var
+  n: Byte;
+begin
+  if Count < 2 then
+    Exit;
+  case Count of
+    2: begin
+      n := 0;
+      g_Console_Add(Format(_lc[I_PLAYER_KILL_2X], [Name]), True);
+    end;
+    3: begin
+      n := 1;
+      g_Console_Add(Format(_lc[I_PLAYER_KILL_3X], [Name]), True);
+    end;
+    4: begin
+      n := 2;
+      g_Console_Add(Format(_lc[I_PLAYER_KILL_4X], [Name]), True);
+    end;
+    else begin
+      n := 3;
+      g_Console_Add(Format(_lc[I_PLAYER_KILL_MX], [Name]), True);
+    end;
+  end;
+  if killsnd[n].IsPlaying() then
+    killsnd[n].Stop();
+  killsnd[n].Play();
 end;
 
 procedure g_Game_StartVote(Command, Initiator: string);

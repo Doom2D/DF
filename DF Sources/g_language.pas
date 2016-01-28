@@ -346,6 +346,12 @@ type
     I_PLAYER_KILL_FALL,
     I_PLAYER_KILL_SELF,
     I_PLAYER_KILL_WATER,
+
+    I_PLAYER_KILL_2X,
+    I_PLAYER_KILL_3X,
+    I_PLAYER_KILL_4X,
+    I_PLAYER_KILL_MX,
+
     I_PLAYER_JOIN,
     I_PLAYER_LEAVE,
     I_PLAYER_KICK,
@@ -1213,6 +1219,15 @@ const
                                        '*** %s убил себя'),
     ('PLAYER KILL WATER',              '*** %s drowned',
                                        '*** %s утонул'),
+
+    ('PLAYER KILL 2X',                 '%s has a double kill!',
+                                       '%s совершил двойное убийство!'),
+    ('PLAYER KILL 3X',                 '%s has a triple kill!',
+                                       '%s совершил тройное убийство!'),
+    ('PLAYER KILL 4X',                 '%s has a multi kill!',
+                                       '%s совершил много убийств подряд!'),
+    ('PLAYER KILL MX',                 '%s has a m-m-m-monster kill!!!',
+                                       '%s м-м-м-монстр убийца!!!'),
 
     ('PLAYER JOIN',                    '%s joined the game.',
                                        '%s присоединился к игре.'),
