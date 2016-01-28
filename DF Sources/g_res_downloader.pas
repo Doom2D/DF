@@ -145,7 +145,7 @@ begin
     end;
   end;
 
-  Result := SaveWAD(MapsDir, FileName, mapData.FileData);
+  Result := SaveWAD(MapsDir, ExtractFileName(FileName), mapData.FileData);
 end;
 
 end.
