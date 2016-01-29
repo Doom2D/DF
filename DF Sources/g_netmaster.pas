@@ -419,7 +419,7 @@ begin
   e_DrawLine(1, 16, 85, gScreenWidth - 16, 85, 255, 127, 0);
   e_DrawLine(1, 16, gScreenHeight-64, gScreenWidth-16, gScreenHeight-64, 255, 127, 0);
 
-  e_DrawLine(1, mx - 52, 64, mx - 52, gScreenHeight-44, 255, 127, 0);
+  e_DrawLine(1, mx - 70, 64, mx - 70, gScreenHeight-44, 255, 127, 0);
   e_DrawLine(1, mx, 64, mx, gScreenHeight-64, 255, 127, 0);
   e_DrawLine(1, mx + 52, 64, mx + 52, gScreenHeight-64, 255, 127, 0);
   e_DrawLine(1, mx + 104, 64, mx + 104, gScreenHeight-64, 255, 127, 0);
@@ -435,17 +435,17 @@ begin
     y := y + 42;
   end;
 
-  e_TextureFontPrintEx(mx - 50, 68, 'PING', gStdFont, 255, 127, 0, 1);
+  e_TextureFontPrintEx(mx - 68, 68, 'PING', gStdFont, 255, 127, 0, 1);
   y := 90;
   for I := 0 to High(SL) do
   begin
     if (SL[I].Ping < 0) or (SL[I].Ping > 999) then
-      e_TextureFontPrintEx(mx - 50, y, _lc[I_NET_SLIST_NO_ACCESS], gStdFont, 255, 0, 0, 1)
+      e_TextureFontPrintEx(mx - 68, y, _lc[I_NET_SLIST_NO_ACCESS], gStdFont, 255, 0, 0, 1)
     else
       if SL[I].Ping = 0 then
-        e_TextureFontPrintEx(mx - 50, y, '<1' + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1)
+        e_TextureFontPrintEx(mx - 68, y, '<1' + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1)
       else
-        e_TextureFontPrintEx(mx - 50, y, IntToStr(SL[I].Ping) + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1);
+        e_TextureFontPrintEx(mx - 68, y, IntToStr(SL[I].Ping) + _lc[I_NET_SLIST_PING_MS], gStdFont, 255, 255, 255, 1);
 
     y := y + 42;
   end;
@@ -479,7 +479,7 @@ begin
 
   e_TextureFontPrintEx(20, gScreenHeight-61, ip, gStdFont, 205, 205, 205, 1);
   ip := IntToStr(Length(SL)) + _lc[I_NET_SLIST_SERVERS];
-  e_TextureFontPrintEx(gScreenWidth - 40 - (Length(ip) + 1)*cw,
+  e_TextureFontPrintEx(gScreenWidth - 48 - (Length(ip) + 1)*cw,
     gScreenHeight-61, ip, gStdFont, 205, 205, 205, 1);
 end;
 
