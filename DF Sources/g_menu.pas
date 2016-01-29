@@ -2439,11 +2439,11 @@ begin
       AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_OFF]);
     end;
     // Переключатель звуковых эффектов (DF / Doom 2)
-    with AddSwitch (_lc[I_MENU_SOUND_EFFECTS]) do
+    with AddSwitch (_lc[I_MENU_SOUND_COMPAT]) do
     begin;
       Name := 'swSoundEffects';
-      AddItem(_lc[I_MENU_DOOM2]);
-      AddItem(_lc[I_MENU_DF]);
+      AddItem(_lc[I_MENU_COMPAT_DOOM2]);
+      AddItem(_lc[I_MENU_COMPAT_DF]);
     end;
     ReAlign();
   end;
@@ -2514,8 +2514,8 @@ begin
     begin
       Name := 'swScreenFlash';
       AddItem(_lc[I_MENU_NO]);
-      AddItem(_lc[I_MENU_DF]);
-      AddItem(_lc[I_MENU_DOOM2]);
+      AddItem(_lc[I_MENU_COMPAT_DF]);
+      AddItem(_lc[I_MENU_COMPAT_DOOM2]);
     end;
     with AddSwitch(_lc[I_MENU_GAME_BACKGROUND]) do
     begin
