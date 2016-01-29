@@ -5568,9 +5568,9 @@ end;
 
 procedure TPlayer.FragCombo();
 begin
-  if (gGameSettings.GameMode = GM_SINGLE) or g_Game_IsClient then
+  if (gGameSettings.GameMode in [GM_COOP, GM_SINGLE]) or g_Game_IsClient then
     Exit;
-  if gTime - FLastFrag < 5000 then
+  if gTime - FLastFrag < 2000 then
   begin
     if FFragCombo < 5 then
       Inc(FFragCombo);
