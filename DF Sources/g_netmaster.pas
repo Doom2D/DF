@@ -66,13 +66,18 @@ var
   slFetched:      Boolean = False;
   slDirPressed:   Boolean = False;
 
+function GetTimerMS(): Integer;
+begin
+  Result := GetTimer() div 1000;
+end;
+
 procedure PingServer(var S: TNetServer; Sock: ENetSocket);
 var
   Buf: ENetBuffer;
   Ping: array [0..5] of Byte;
   ClTime: Integer;
 begin
-  ClTime := GetCurrentTime();
+  ClTime := GetTimerMS();
 
   Buf.data := Addr(Ping[0]);
   Buf.dataLength := 6;
@@ -165,7 +170,7 @@ begin
   for I := Low(SL) to High(SL) do
     PingServer(SL[I], Sock);
 
-  T := GetCurrentTime();
+  T := GetTimerMS();
 
   e_Buffer_Clear(@NetIn);
   Buf.data := Addr(NetIn.Data);
@@ -173,7 +178,7 @@ begin
   Cnt := 0;
   while Cnt < Length(SL) do
   begin
-    if GetCurrentTime() - T > 500 then break;
+    if GetTimerMS() - T > 500 then break;
 
     e_Buffer_Clear(@NetIn);
 
@@ -192,7 +197,7 @@ begin
         with SL[I] do
         begin
           Ping := e_Buffer_Read_LongInt(@NetIn);
-          Ping := GetCurrentTime() - Ping;
+          Ping := GetTimerMS() - Ping;
           Name := e_Buffer_Read_String(@NetIn);
           Map := e_Buffer_Read_String(@NetIn);
           GameMode := e_Buffer_Read_Byte(@NetIn);
