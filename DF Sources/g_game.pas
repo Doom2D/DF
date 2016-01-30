@@ -210,6 +210,7 @@ var
   gShowStat: Boolean = True;
   gShowKillMsg: Boolean = True;
   gShowLives: Boolean = True;
+  gShowPing: Boolean = False;
   gShowMap: Boolean = False;
   gExit: Byte = 0;
   gState: Byte = STATE_NONE;
@@ -4604,6 +4605,17 @@ begin
         g_Console_Add(_lc[I_MSG_SPECT_HUD_ON])
       else
         g_Console_Add(_lc[I_MSG_SPECT_HUD_OFF]);
+    end
+    else if cmd = 'r_showping' then
+    begin
+      if (Length(P) > 1) and
+         ((P[1] = '1') or (P[1] = '0')) then
+        gShowPing := (P[1][1] = '1');
+
+      if gShowPing then
+        g_Console_Add(_lc[I_MSG_PING_ON])
+      else
+        g_Console_Add(_lc[I_MSG_PING_OFF]);
     end
     else if (cmd = 'g_scorelimit') and not g_Game_IsClient then
     begin

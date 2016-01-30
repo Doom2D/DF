@@ -377,6 +377,7 @@ begin
   AddCommand('r_showstat', GameCVars);
   AddCommand('r_showkillmsg', GameCVars);
   AddCommand('r_showspect', GameCVars);
+  AddCommand('r_showping', GameCVars);
   AddCommand('g_gamemode', GameCVars);
   AddCommand('g_friendlyfire', GameCVars);
   AddCommand('g_weaponstay', GameCVars);

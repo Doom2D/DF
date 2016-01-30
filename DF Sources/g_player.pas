@@ -2437,6 +2437,13 @@ begin
     e_DrawLine(4, X+16, Y+130, X+16+Trunc(168*IfThen(FAir > 0, FAir, 0)/AIR_MAX), Y+130, 0, 0, 196);
   end;
 
+  if gShowPing and g_Game_IsClient then
+  begin
+    s := _lc[I_GAME_PING_HUD] + IntToStr(NetPeer.lastRoundTripTime) + _lc[I_NET_SLIST_PING_MS];
+    e_TextureFontPrint(X + 4, Y + 242, s, gStdFont);
+    Y := Y + 16;
+  end;
+
   if FSpectator then
   begin
     e_TextureFontPrint(X + 4, Y + 242, _lc[I_PLAYER_SPECT], gStdFont);
