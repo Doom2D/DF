@@ -2280,6 +2280,7 @@ var
   cw, ch: Byte;
   s: string;
   stat: TPlayerStatArray;
+  b: Boolean;
 begin
   X := gPlayerScreenSize.X;
   SY := gPlayerScreenSize.Y;
@@ -2372,9 +2373,16 @@ begin
   e_CharFont_GetSize(gMenuSmallFont, FName, tw, th);
   e_CharFont_PrintEx(gMenuSmallFont, X+98-(tw div 2), Y+8, FName, _RGB(255, 0, 0));
 
-  e_Draw(gItemsTexturesID[ITEM_MEDKIT_LARGE], X+37, Y+45, 0, True, False);
+  if R_BERSERK in FRulez then
+    e_Draw(gItemsTexturesID[ITEM_MEDKIT_BLACK], X+37, Y+45, 0, True, False)
+  else
+    e_Draw(gItemsTexturesID[ITEM_MEDKIT_LARGE], X+37, Y+45, 0, True, False);
 
-  if g_Texture_Get('TEXTURE_PLAYER_ARMORHUD', ID) then
+  if FArmor >= 150 then
+    b := g_Texture_Get('TEXTURE_PLAYER_ARMOR2HUD', ID)
+  else
+    b := g_Texture_Get('TEXTURE_PLAYER_ARMOR1HUD', ID);
+  if b then
     e_Draw(ID, X+36, Y+77, 0, True, False);
 
   s := IntToStr(IfThen(FHealth > 0, FHealth, 0));
