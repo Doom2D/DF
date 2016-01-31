@@ -9,10 +9,8 @@ interface
 uses
   Windows, dglOpenGL, SysUtils, e_log;
 
-const
-  fUseMipmaps = False;
-
 var
+  fUseMipmaps: Boolean = False;
   TEXTUREFILTER: Integer = GL_NEAREST;
 
 // Standard set of images loading functions

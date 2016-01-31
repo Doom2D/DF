@@ -198,6 +198,7 @@ begin
     gBPP := 32;
     gVSync := False;
     gTextureFilter := True;
+    fUseMipmaps := False;
 
     Exit;
   end;
@@ -222,6 +223,7 @@ begin
   gFreq := config.ReadInt('Video', 'Freq', 0);
   gVSync := config.ReadBool('Video', 'VSync', True);
   gTextureFilter := config.ReadBool('Video', 'TextureFilter', True);
+  fUseMipmaps := config.ReadBool('Video', 'LegacyCompatible', False);
 
   gSoundLevel := Min(config.ReadInt('Sound', 'SoundLevel', 75), 255);
   gMusicLevel := Min(config.ReadInt('Sound', 'MusicLevel', 65), 255);
@@ -424,6 +426,7 @@ begin
   config.WriteInt('Video', 'BPP', gBPP);
   config.WriteBool('Video', 'VSync', gVSync);
   config.WriteBool('Video', 'TextureFilter', gTextureFilter);
+  config.WriteBool('Video', 'LegacyCompatible', fUseMipmaps);
 
   config.WriteInt('Sound', 'SoundLevel', gSoundLevel);
   config.WriteInt('Sound', 'MusicLevel', gMusicLevel);
