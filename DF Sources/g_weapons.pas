@@ -381,6 +381,9 @@ end;
 procedure g_Weapon_BFG9000(X, Y: Integer; SpawnerUID: Word);
 var
   i, h: Integer;
+  st: Byte;
+  pl: TPlayer;
+  b: Boolean;
 begin
   //g_Sound_PlayEx('SOUND_WEAPON_EXPLODEBFG', 255);
 
@@ -400,6 +403,11 @@ begin
                             Obj.Y+Obj.Rect.Y+(Obj.Rect.Height div 2));
           end;
 
+  st := TEAM_NONE;
+  pl := g_Player_Get(SpawnerUID);
+  if pl <> nil then
+    st := pl.Team;
+
   h := High(gPlayers);
 
   if h <> -1 then
@@ -410,7 +418,14 @@ begin
                             GameY+PLAYER_RECT.Y+(PLAYER_RECT.Height div 2)) <= SHOT_BFG_RADIUS) and
               g_TraceVector(X, Y, GameX+PLAYER_RECT.X+(PLAYER_RECT.Width div 2),
                             GameY+PLAYER_RECT.Y+(PLAYER_RECT.Height div 2)) then
-            if HitPlayer(gPlayers[i], 50, 0, 0, SpawnerUID, HIT_SOME) then gPlayers[i].BFGHit();
+          begin
+            if (st = TEAM_NONE) or (st <> gPlayers[i].Team) then
+              b := HitPlayer(gPlayers[i], 50, 0, 0, SpawnerUID, HIT_SOME)
+            else
+              b := HitPlayer(gPlayers[i], 25, 0, 0, SpawnerUID, HIT_SOME);
+            if b then
+              gPlayers[i].BFGHit();
+          end;
 
   h := High(gMonsters);
 
