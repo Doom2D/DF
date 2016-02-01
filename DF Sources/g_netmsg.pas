@@ -1738,7 +1738,7 @@ begin
       g_Game_Message(_lc[I_GAME_WIN_DRAW], 144);
 
     NET_EV_KILLCOMBO:
-      g_Game_Announce_KillCombo(EvStr, EvNum);
+      g_Game_Announce_KillCombo(EvNum);
 
     NET_EV_PLAYER_TOUCH:
     begin

@@ -5594,6 +5594,8 @@ begin
 end;
 
 procedure TPlayer.FragCombo();
+var
+  Param: Integer;
 begin
   if (gGameSettings.GameMode in [GM_COOP, GM_SINGLE]) or g_Game_IsClient then
     Exit;
@@ -5601,17 +5603,18 @@ begin
   begin
     if FFragCombo < 5 then
       Inc(FFragCombo);
+    Param := FUID or (FFragCombo shl 16);
     if (FComboEvnt >= Low(gDelayedEvents)) and
        (FComboEvnt <= High(gDelayedEvents)) and
        gDelayedEvents[FComboEvnt].Pending and
        (gDelayedEvents[FComboEvnt].DEType = DE_KILLCOMBO) and
-       (gDelayedEvents[FComboEvnt].DEStr = FName) then
+       (gDelayedEvents[FComboEvnt].DENum and $FFFF = FUID) then
     begin
       gDelayedEvents[FComboEvnt].Time := gTime + 500;
-      gDelayedEvents[FComboEvnt].DENum := FFragCombo;
+      gDelayedEvents[FComboEvnt].DENum := Param;
     end
     else
-      FComboEvnt := g_Game_DelayEvent(DE_KILLCOMBO, 500, FFragCombo, FName);
+      FComboEvnt := g_Game_DelayEvent(DE_KILLCOMBO, 500, Param);
   end
   else
     FFragCombo := 1;

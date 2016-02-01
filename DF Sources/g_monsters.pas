@@ -1625,7 +1625,8 @@ begin
             p.MonsterKills := p.MonsterKills+1;
             if gGameSettings.GameMode = GM_COOP then
               p.Frags := p.Frags + 1;
-            p.FragCombo();
+            // Uncomment this if you want to double-kill monsters
+            //p.FragCombo();
           end;
         end;
         if gLMSRespawn = LMS_RESPAWN_NONE then

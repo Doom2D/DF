@@ -61,6 +61,7 @@ begin
 
   gMaxSimSounds := Max(Min(TGUIScroll(menu.GetControl('scMaxSimSounds')).Value*4+2, 66), 2);
   gMuteWhenInactive := TGUISwitch(menu.GetControl('swInactiveSounds')).ItemIndex = 1;
+  gAnnouncer := TGUISwitch(menu.GetControl('swAnnouncer')).ItemIndex;
   gSoundEffectsDF := TGUISwitch(menu.GetControl('swSoundEffects')).ItemIndex = 1;
 
   menu := TGUIMenu(g_GUI_GetWindow('OptionsGameMenu').GetControl('mOptionsGameMenu'));
@@ -215,6 +216,8 @@ begin
       ItemIndex := 1
     else
       ItemIndex := 0;
+
+  TGUISwitch(menu.GetControl('swAnnouncer')).ItemIndex := gAnnouncer;
 
   with TGUISwitch(menu.GetControl('swSoundEffects')) do
     if gSoundEffectsDF then
@@ -2432,11 +2435,13 @@ begin
       Name := 'scMaxSimSounds';
       Max := 16;
     end;
-    with AddSwitch(_lc[I_MENU_SOUND_INACTIVE_SOUNDS]) do
-    begin
-      Name := 'swInactiveSounds';
-      AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_ON]);
-      AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_OFF]);
+    with AddSwitch (_lc[I_MENU_SOUND_ANNOUNCE]) do
+    begin;
+      Name := 'swAnnouncer';
+      AddItem(_lc[I_MENU_ANNOUNCE_NONE]);
+      AddItem(_lc[I_MENU_ANNOUNCE_ME]);
+      AddItem(_lc[I_MENU_ANNOUNCE_MEPLUS]);
+      AddItem(_lc[I_MENU_ANNOUNCE_ALL]);
     end;
     // Переключатель звуковых эффектов (DF / Doom 2)
     with AddSwitch (_lc[I_MENU_SOUND_COMPAT]) do
@@ -2444,6 +2449,12 @@ begin
       Name := 'swSoundEffects';
       AddItem(_lc[I_MENU_COMPAT_DOOM2]);
       AddItem(_lc[I_MENU_COMPAT_DF]);
+    end;
+    with AddSwitch(_lc[I_MENU_SOUND_INACTIVE_SOUNDS]) do
+    begin
+      Name := 'swInactiveSounds';
+      AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_ON]);
+      AddItem(_lc[I_MENU_SOUND_INACTIVE_SOUNDS_OFF]);
     end;
     ReAlign();
   end;

@@ -103,6 +103,8 @@ begin
   g_Sound_SetupAllVolumes(75, 65);
   gMaxSimSounds := 8;
   gMuteWhenInactive := False;
+  gAnnouncer := ANNOUNCE_MEPLUS;
+  gSoundEffectsDF := True;
   g_GFX_SetMax(2000);
   g_Gibs_SetMax(150);
   g_Corpses_SetMax(20);
@@ -229,6 +231,7 @@ begin
   gMusicLevel := Min(config.ReadInt('Sound', 'MusicLevel', 65), 255);
   gMaxSimSounds := Max(Min(config.ReadInt('Sound', 'MaxSimSounds', 8), 66), 2);
   gMuteWhenInactive := config.ReadBool('Sound', 'MuteInactive', False);
+  gAnnouncer := Min(Max(config.ReadInt('Sound', 'Announcer', ANNOUNCE_MEPLUS), ANNOUNCE_NONE), ANNOUNCE_ALL);
   gSoundEffectsDF := config.ReadBool('Sound', 'SoundEffectsDF', True);
 
   with gGameControls.GameControls do
@@ -432,6 +435,7 @@ begin
   config.WriteInt('Sound', 'MusicLevel', gMusicLevel);
   config.WriteInt('Sound', 'MaxSimSounds', gMaxSimSounds);
   config.WriteBool('Sound', 'MuteInactive', gMuteWhenInactive);
+  config.WriteInt('Sound', 'Announcer', gAnnouncer);
   config.WriteBool('Sound', 'SoundEffectsDF', gSoundEffectsDF);
 
   with config, gGameControls.GameControls do

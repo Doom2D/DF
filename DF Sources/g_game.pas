@@ -87,13 +87,16 @@ function  g_Game_GetNextMap(): String;
 procedure g_Game_NextLevel();
 procedure g_Game_Pause(Enable: Boolean);
 procedure g_Game_InGameMenu(Show: Boolean);
+function  g_Game_IsWatchedPlayer(UID: Word): Boolean;
+function  g_Game_IsWatchedTeam(Team: Byte): Boolean;
 procedure g_Game_Message(Msg: String; Time: Word);
 procedure g_Game_LoadMapList(FileName: String);
 procedure g_Game_PauseAllSounds(Enable: Boolean);
 procedure g_Game_StopAllSounds(all: Boolean);
 procedure g_Game_UpdateTriggerSounds();
 function  g_Game_GetMegaWADInfo(WAD: String): TMegaWADInfo;
-procedure g_Game_Announce_KillCombo(Name: String; Count: Byte);
+procedure g_Game_Announce_GoodShot(SpawnerUID: Word);
+procedure g_Game_Announce_KillCombo(Param: Integer);
 procedure g_Game_StartVote(Command, Initiator: string);
 procedure g_Game_CheckVote;
 procedure g_TakeScreenShot();
@@ -171,6 +174,11 @@ const
   DE_BFGHIT    = 1;
   DE_KILLCOMBO = 2;
 
+  ANNOUNCE_NONE   = 0;
+  ANNOUNCE_ME     = 1;
+  ANNOUNCE_MEPLUS = 2;
+  ANNOUNCE_ALL    = 3;
+
   CONFIG_FILENAME = 'Doom2DF.cfg';
   LOG_FILENAME = 'Doom2DF.log';
 
@@ -195,6 +203,7 @@ var
   gHearPoint1, gHearPoint2: THearPoint;
   gSoundEffectsDF: Boolean = False;
   gSoundTriggerTime: Word = 0;
+  gAnnouncer: Byte = ANNOUNCE_NONE;
   goodsnd: array[0..3] of TPlayableSound;
   killsnd: array[0..3] of TPlayableSound;
   gDefInterTime: ShortInt = -1;
@@ -1173,7 +1182,6 @@ var
   a: Byte;
   w: Word;
   i, b: Integer;
-  snd: Boolean;
 begin
 // Пора выключать игру:
   if gExit = EXIT_QUIT then
@@ -1752,24 +1760,13 @@ begin
             g_Game_ExecuteEvent(gDelayedEvents[a].DEStr);
           DE_BFGHIT:
             if gGameOn then
-            begin
-              snd := True;
-              for b := 0 to 3 do
-                if goodsnd[b].IsPlaying() then
-                begin
-                  snd := False;
-                  break;
-                end;
-              // TODO: check SpawnerUID with gDelayedEvents[a].DENum
-              if snd then
-                goodsnd[Random(4)].Play();
-            end;
+              g_Game_Announce_GoodShot(gDelayedEvents[a].DENum);
           DE_KILLCOMBO:
             if gGameOn then
             begin
-              g_Game_Announce_KillCombo(gDelayedEvents[a].DEStr, gDelayedEvents[a].DENum);
+              g_Game_Announce_KillCombo(gDelayedEvents[a].DENum);
               if g_Game_IsNet and g_Game_IsServer then
-                MH_SEND_GameEvent(NET_EV_KILLCOMBO, gDelayedEvents[a].DENum, gDelayedEvents[a].DEStr);
+                MH_SEND_GameEvent(NET_EV_KILLCOMBO, gDelayedEvents[a].DENum);
             end;
         end;
         gDelayedEvents[a].Pending := False;
@@ -5894,19 +5891,111 @@ begin
         end;
 end;
 
+function g_Game_IsWatchedPlayer(UID: Word): Boolean;
+begin
+  Result := False;
+  if (gPlayer1 <> nil) and (gPlayer1.UID = UID) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if (gPlayer2 <> nil) and (gPlayer2.UID = UID) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if gSpectMode <> SPECT_PLAYERS then
+    Exit;
+  if gSpectPID1 = UID then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if gSpectViewTwo and (gSpectPID2 = UID) then
+  begin
+    Result := True;
+    Exit;
+  end;
+end;
+
+function g_Game_IsWatchedTeam(Team: Byte): Boolean;
+var
+  Pl: TPlayer;
+begin
+  Result := False;
+  if (gPlayer1 <> nil) and (gPlayer1.Team = Team) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if (gPlayer2 <> nil) and (gPlayer2.Team = Team) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if gSpectMode <> SPECT_PLAYERS then
+    Exit;
+  Pl := g_Player_Get(gSpectPID1);
+  if (Pl <> nil) and (Pl.Team = Team) then
+  begin
+    Result := True;
+    Exit;
+  end;
+  if gSpectViewTwo then
+  begin
+    Pl := g_Player_Get(gSpectPID2);
+    if (Pl <> nil) and (Pl.Team = Team) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
 procedure g_Game_Message(Msg: string; Time: Word);
 begin
   MessageText := b_Text_Format(Msg);
   MessageTime := Time;
 end;
 
-procedure g_Game_Announce_KillCombo(Name: String; Count: Byte);
+procedure g_Game_Announce_GoodShot(SpawnerUID: Word);
 var
-  n: Byte;
+  a: Integer;
 begin
-  if Count < 2 then
+  case gAnnouncer of
+    ANNOUNCE_NONE:
+      Exit;
+    ANNOUNCE_ME,
+    ANNOUNCE_MEPLUS:
+      if not g_Game_IsWatchedPlayer(SpawnerUID) then
+        Exit;
+  end;
+  for a := 0 to 3 do
+    if goodsnd[a].IsPlaying() then
+      Exit;
+
+  goodsnd[Random(4)].Play();
+end;
+
+procedure g_Game_Announce_KillCombo(Param: Integer);
+var
+  UID: Word;
+  c, n: Byte;
+  Pl: TPlayer;
+  Name: String;
+begin
+  UID := Param and $FFFF;
+  c := Param shr 16;
+  if c < 2 then
     Exit;
-  case Count of
+
+  Pl := g_Player_Get(UID);
+  if Pl = nil then
+    Name := '?'
+  else
+    Name := Pl.Name;
+
+  case c of
     2: begin
       n := 0;
       g_Console_Add(Format(_lc[I_PLAYER_KILL_2X], [Name]), True);
@@ -5924,6 +6013,18 @@ begin
       g_Console_Add(Format(_lc[I_PLAYER_KILL_MX], [Name]), True);
     end;
   end;
+
+  case gAnnouncer of
+    ANNOUNCE_NONE:
+      Exit;
+    ANNOUNCE_ME:
+      if not g_Game_IsWatchedPlayer(UID) then
+        Exit;
+    ANNOUNCE_MEPLUS:
+      if (not g_Game_IsWatchedPlayer(UID)) and (c < 4) then
+        Exit;
+  end;
+
   if killsnd[n].IsPlaying() then
     killsnd[n].Stop();
   killsnd[n].Play();
