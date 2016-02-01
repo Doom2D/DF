@@ -84,8 +84,8 @@ const
   NET_EV_LMS_SURVIVOR = 7;
   NET_EV_RCON         = 8;
   NET_EV_BIGTEXT      = 9;
-  NET_EV_SCORE_ADD    = 10;
-  NET_EV_SCORE_SUB    = 11;
+  NET_EV_SCORE        = 10;
+  NET_EV_SCORE_MSG    = 11;
   NET_EV_LMS_START    = 12;
   NET_EV_LMS_WIN      = 13;
   NET_EV_TLMS_WIN     = 14;
@@ -1620,6 +1620,9 @@ var
   BHash: Boolean;
   EvHash: TMD5Digest;
   pl: TPlayer;
+  i1, i2: TStrings_Locale;
+  pln: String;
+  cnt: Byte;
 begin
   EvType := e_Raw_Read_Byte(P);
   EvNum := e_Raw_Read_LongInt(P);
@@ -1698,19 +1701,78 @@ begin
     NET_EV_BIGTEXT:
       g_Game_Message(AnsiUpperCase(EvStr), Word(EvNum));
 
-    NET_EV_SCORE_ADD:
+    NET_EV_SCORE:
+    begin
+      pl := g_Player_Get(EvNum and $FFFF);
+      if pl = nil then
+        pln := '?'
+      else
+        pln := pl.Name;
+      cnt := (EvNum shr 16) and $FF;
+      if Pos('w', EvStr) = 0 then
+      begin
+        // Default score
+        if Pos('t', EvStr) = 0 then
+        begin
+          // Player +/- score
+          if Pos('-', EvStr) = 0 then
+          begin
+            if Pos('e', EvStr) = 0 then
+              i1 := I_PLAYER_SCORE_ADD_OWN
+            else
+              i1 := I_PLAYER_SCORE_ADD_ENEMY;
+          end else
+          begin
+            if Pos('e', EvStr) = 0 then
+              i1 := I_PLAYER_SCORE_SUB_OWN
+            else
+              i1 := I_PLAYER_SCORE_SUB_ENEMY;
+          end;
+          // Which team
+          if Pos('r', EvStr) > 0 then
+            i2 := I_PLAYER_SCORE_TO_RED
+          else
+            i2 := I_PLAYER_SCORE_TO_BLUE;
+          g_Console_Add(Format(_lc[i1], [pln, cnt, _lc[i2]]), True);
+        end else
+        begin
+          // Team +/- score
+          if Pos('-', EvStr) = 0 then
+            i1 := I_PLAYER_SCORE_ADD_TEAM
+          else
+            i1 := I_PLAYER_SCORE_SUB_TEAM;
+          // Which team
+          if Pos('r', EvStr) > 0 then
+            i2 := I_PLAYER_SCORE_RED
+          else
+            i2 := I_PLAYER_SCORE_BLUE;
+          g_Console_Add(Format(_lc[i1], [_lc[i2], cnt]), True);
+        end;
+      end else
+      begin
+        // Game Win
+        if Pos('e', EvStr) = 0 then
+          i1 := I_PLAYER_SCORE_WIN_OWN
+        else
+          i1 := I_PLAYER_SCORE_WIN_ENEMY;
+        // Which team
+        if Pos('r', EvStr) > 0 then
+          i2 := I_PLAYER_SCORE_TO_RED
+        else
+          i2 := I_PLAYER_SCORE_TO_BLUE;
+        g_Console_Add(Format(_lc[i1], [pln, _lc[i2]]), True);
+      end;
+    end;
+
+    NET_EV_SCORE_MSG:
     begin
       if EvNum = TEAM_RED then
         g_Game_Message(Format(_lc[I_MESSAGE_SCORE_ADD], [AnsiUpperCase(_lc[I_GAME_TEAM_RED])]), 108);
       if EvNum = TEAM_BLUE then
         g_Game_Message(Format(_lc[I_MESSAGE_SCORE_ADD], [AnsiUpperCase(_lc[I_GAME_TEAM_BLUE])]), 108);
-    end;
-
-    NET_EV_SCORE_SUB:
-    begin
-      if EvNum = TEAM_RED then
+      if EvNum = -TEAM_RED then
         g_Game_Message(Format(_lc[I_MESSAGE_SCORE_SUB], [AnsiUpperCase(_lc[I_GAME_TEAM_RED])]), 108);
-      if EvNum = TEAM_BLUE then
+      if EvNum = -TEAM_BLUE then
         g_Game_Message(Format(_lc[I_MESSAGE_SCORE_SUB], [AnsiUpperCase(_lc[I_GAME_TEAM_BLUE])]), 108);
     end;
 

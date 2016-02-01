@@ -271,7 +271,9 @@ Type
                              ResetVel: Boolean);
       TRIGGER_SCORE:        (ScoreAction: Byte;
                              ScoreCount: Byte;
-                             ScoreTeam: Byte);
+                             ScoreTeam: Byte;
+                             ScoreCon,
+                             ScoreMsg: Boolean);
       TRIGGER_MESSAGE:      (MessageKind: Byte;
                              MessageSendTo: Byte;
                              MessageText: Char100;

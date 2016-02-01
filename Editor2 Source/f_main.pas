@@ -1332,6 +1332,16 @@ begin
                   EditStyle := esPickList;
                   ReadOnly := True;
                 end;
+                with ItemProps[InsertRow(_lc[I_PROP_TR_SCORE_CON], BoolNames[Data.ScoreCon], True)-1] do
+                begin
+                  EditStyle := esPickList;
+                  ReadOnly := True;
+                end;
+                with ItemProps[InsertRow(_lc[I_PROP_TR_SCORE_MSG], BoolNames[Data.ScoreMsg], True)-1] do
+                begin
+                  EditStyle := esPickList;
+                  ReadOnly := True;
+                end;
               end;
 
             TRIGGER_MESSAGE:
@@ -3686,6 +3696,8 @@ begin
                   TRIGGER_SCORE:
                     begin
                       trigger.Data.ScoreCount := 1;
+                      trigger.Data.ScoreCon := True;
+                      trigger.Data.ScoreMsg := True;
                     end;
 
                   TRIGGER_MESSAGE:
@@ -4403,6 +4415,8 @@ begin
             (KeyName = _lc[I_PROP_TR_SOUND_SWITCH]) or
             (KeyName = _lc[I_PROP_TR_MONSTER_ACTIVE]) or
             (KeyName = _lc[I_PROP_TR_PUSH_RESET]) or
+            (KeyName = _lc[I_PROP_TR_SCORE_CON]) or
+            (KeyName = _lc[I_PROP_TR_SCORE_MSG]) or
             (KeyName = _lc[I_PROP_TR_HEALTH_MAX]) or
             (KeyName = _lc[I_PROP_TR_SHOT_ALLMAP]) or
             (KeyName = _lc[I_PROP_TR_SHOT_SOUND]) or
@@ -4750,6 +4764,8 @@ begin
                   Data.ScoreTeam := 2
                 else if vleObjectProperty.Values[_lc[I_PROP_TR_SCORE_TEAM]] = _lc[I_PROP_TR_SCORE_TEAM_3] then
                   Data.ScoreTeam := 3;
+                Data.ScoreCon := NameToBool(vleObjectProperty.Values[_lc[I_PROP_TR_SCORE_CON]]);
+                Data.ScoreMsg := NameToBool(vleObjectProperty.Values[_lc[I_PROP_TR_SCORE_MSG]]);
               end;
 
             TRIGGER_MESSAGE:
