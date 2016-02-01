@@ -218,6 +218,7 @@ type
     constructor Create(); virtual;
     destructor  Destroy(); override;
     procedure   Respawn(Silent: Boolean; Force: Boolean = False); virtual;
+    function    GetRespawnPoint(): Byte;
     procedure   PressKey(Key: Byte; Time: Word = 1);
     procedure   ReleaseKeys();
     procedure   SetModel(ModelName: String);
@@ -417,7 +418,6 @@ var
   gTeamStat: TTeamStat;
   gFly: Boolean = False;
   gAimLine: Boolean = False;
-  gLastSpawnUsed: Byte = 0;
   gChatBubble: Byte = 0;
   gNumBots: Word = 0;
   gLMSPID1: Word = 0;
@@ -3766,6 +3766,155 @@ begin
   SetAction(A_STAND, True);
 end;
 
+function TPlayer.GetRespawnPoint(): Byte;
+var
+  c: Byte;
+begin
+  Result := 255;
+  // На будущее: FSpawn - игрок уже играл и перерождается
+
+  // Одиночная игра/кооператив
+  if gGameSettings.GameMode in [GM_COOP, GM_SINGLE] then
+  begin
+    if (Self = gPlayer1) or (Self = gPlayer2) then
+    begin
+      // Точка появления своего игрока
+      if Self = gPlayer1 then
+        c := RESPAWNPOINT_PLAYER1
+      else
+        c := RESPAWNPOINT_PLAYER2;
+      if g_Map_GetPointCount(c) > 0 then
+      begin
+        Result := c;
+        Exit;
+      end;
+
+      // Точка появления другого игрока
+      if Self = gPlayer1 then
+        c := RESPAWNPOINT_PLAYER2
+      else
+        c := RESPAWNPOINT_PLAYER1;
+      if g_Map_GetPointCount(c) > 0 then
+      begin
+        Result := c;
+        Exit;
+      end;
+    end else
+    begin
+      // Точка появления любого игрока (бота)
+      if Random(2) = 0 then
+        c := RESPAWNPOINT_PLAYER1
+      else
+        c := RESPAWNPOINT_PLAYER2;
+      if g_Map_GetPointCount(c) > 0 then
+      begin
+        Result := c;
+        Exit;
+      end;
+    end;
+
+    // Точка любой из команд
+    if Random(2) = 0 then
+      c := RESPAWNPOINT_RED
+    else
+      c := RESPAWNPOINT_BLUE;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка DM
+    c := RESPAWNPOINT_DM;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+  end;
+
+  // Мясоповал
+  if gGameSettings.GameMode = GM_DM then
+  begin
+    // Точка DM
+    c := RESPAWNPOINT_DM;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка появления любого игрока
+    if Random(2) = 0 then
+      c := RESPAWNPOINT_PLAYER1
+    else
+      c := RESPAWNPOINT_PLAYER2;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка любой из команд
+    if Random(2) = 0 then
+      c := RESPAWNPOINT_RED
+    else
+      c := RESPAWNPOINT_BLUE;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+  end;
+
+  // Командные
+  if gGameSettings.GameMode in [GM_TDM, GM_CTF] then
+  begin
+    // Точка своей команды
+    c := RESPAWNPOINT_DM;
+    if FTeam = TEAM_RED then
+      c := RESPAWNPOINT_RED;
+    if FTeam = TEAM_BLUE then
+      c := RESPAWNPOINT_BLUE;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка DM
+    c := RESPAWNPOINT_DM;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка появления любого игрока
+    if Random(2) = 0 then
+      c := RESPAWNPOINT_PLAYER1
+    else
+      c := RESPAWNPOINT_PLAYER2;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+
+    // Точка другой команды
+    c := RESPAWNPOINT_DM;
+    if FTeam = TEAM_RED then
+      c := RESPAWNPOINT_BLUE;
+    if FTeam = TEAM_BLUE then
+      c := RESPAWNPOINT_RED;
+    if g_Map_GetPointCount(c) > 0 then
+    begin
+      Result := c;
+      Exit;
+    end;
+  end;
+end;
+
 procedure TPlayer.Respawn(Silent: Boolean; Force: Boolean = False);
 var
   RespawnPoint: TRespawnPoint;
@@ -3788,255 +3937,31 @@ begin
   // if server changes MaxLives we gotta be ready
   if gGameSettings.MaxLives = 0 then FNoRespawn := False;
 
+// Еще нельзя возродиться:
+  if FTime[T_RESPAWN] > gTime then
+    Exit;
+
+// Просрал все жизни:
+  if FNoRespawn then
+  begin
+    if not FSpectator then Spectate(True);
+    FWantsInGame := True;
+    Exit;
+  end;
+
   if (gGameSettings.GameType <> GT_SINGLE) and (gGameSettings.GameMode <> GM_COOP) then
     begin // "Своя игра"
-    // Еще нельзя возродиться:
-      if FTime[T_RESPAWN] > gTime then
-        Exit;
-
-    // Просрал все жизни:
-      if FNoRespawn then
-      begin
-        if not FSpectator then Spectate(True);
-        FWantsInGame := True;
-        Exit;
-      end;
-
-      if gGameSettings.GameMode = GM_DM then
-        begin // DM ...
-          if not FSpawned then
-          begin // Приходит в первый раз
-            // Точка своего игрока
-            c := RESPAWNPOINT_PLAYER1;
-            if Self = gPlayer2 then
-              c := RESPAWNPOINT_PLAYER2;
-
-            if g_Map_GetPointCount(c) = 0 then
-            begin // Этой точки нет
-              // Пробуем точку любой из команд
-              if Random(2) = 0 then
-                c := RESPAWNPOINT_RED
-              else
-                c := RESPAWNPOINT_BLUE;
-
-              if g_Map_GetPointCount(c) = 0 then
-              begin // Точки этой команды нет
-                // Пробуем точку противоположной команды
-                if c = RESPAWNPOINT_RED then
-                  c := RESPAWNPOINT_BLUE
-                else
-                  c := RESPAWNPOINT_RED;
-
-                if g_Map_GetPointCount(c) = 0 then
-                begin // И её тоже нет
-                  // Пробуем точку возрождения DM
-                  c := RESPAWNPOINT_DM;
-
-                  if g_Map_GetPointCount(c) = 0 then
-                  begin // Если и её нет,
-                    // пробуем точку другого игрока
-                    c := RESPAWNPOINT_PLAYER2;
-                    if Self = gPlayer2 then
-                      c := RESPAWNPOINT_PLAYER1;
-                  end;
-                end;
-              end;
-            end;
-          end else
-          begin // Уже играл, возрождается
-            // Точка возрождения DM:
-            c := RESPAWNPOINT_DM;
-
-            if g_Map_GetPointCount(c) = 0 then
-            begin // Точек возрождения DM нет
-              // Пробуем точку своего игрока:
-              c := RESPAWNPOINT_PLAYER1;
-              if Self = gPlayer2 then
-                c := RESPAWNPOINT_PLAYER2;
-
-              if g_Map_GetPointCount(c) = 0 then
-              begin // Этой точки нет
-                // Пробуем командную точку:
-                if Random(2) = 0 then
-                  c := RESPAWNPOINT_RED
-                else
-                  c := RESPAWNPOINT_BLUE;
-
-                if g_Map_GetPointCount(c) = 0 then
-                begin // Точки этой команды нет
-                  // Пробуем другую команду:
-                  if c = RESPAWNPOINT_RED then
-                    c := RESPAWNPOINT_BLUE
-                  else
-                    c := RESPAWNPOINT_RED;
-
-                  if g_Map_GetPointCount(c) = 0 then
-                  begin // И этой точки нет
-                    // Пробуем точку другого игрока:
-                    c := RESPAWNPOINT_PLAYER2;
-                    if Self = gPlayer2 then
-                      c := RESPAWNPOINT_PLAYER1;
-                  end;
-                end;
-              end;
-            end;
-          end;
-        end // ... DM
-      else
-        begin // TDM / CTF ...
-          if not FSpawned then
-          begin // Приходит в первый раз
-            // Командная точка возрождения:
-            if FTeam = TEAM_RED then
-              c := RESPAWNPOINT_RED
-            else
-              c := RESPAWNPOINT_BLUE;
-
-            if g_Map_GetPointCount(c) = 0 then
-            begin // Точки этой команды нет
-              // Пробуем точку начала одиночной игры:
-              if Random(2) = 0 then
-                c := RESPAWNPOINT_PLAYER1
-              else
-                c := RESPAWNPOINT_PLAYER2;
-
-              if g_Map_GetPointCount(c) = 0 then
-              begin // Этой точки нет
-                // Пробуем противоположную:
-                if c = RESPAWNPOINT_PLAYER1 then
-                  c := RESPAWNPOINT_PLAYER2
-                else
-                  c := RESPAWNPOINT_PLAYER1;
-
-                if g_Map_GetPointCount(c) = 0 then
-                begin // Точек одиночной игры нет
-                  // Пробуем точку возрождения DM:
-                  c := RESPAWNPOINT_DM;
-
-                  if g_Map_GetPointCount(c) = 0 then
-                  begin // Точек возрождения DM нет
-                    // Пробуем другую команду:
-                    if FTeam = TEAM_RED then
-                      c := RESPAWNPOINT_BLUE
-                    else
-                      c := RESPAWNPOINT_RED;
-                  end;
-                end;
-              end;
-            end;
-          end else
-          begin // Уже играл, возрождается
-            // Командная точка возрождения:
-            if FTeam = TEAM_RED then
-              c := RESPAWNPOINT_RED
-            else
-              c := RESPAWNPOINT_BLUE;
-
-            if g_Map_GetPointCount(c) = 0 then
-            begin // Точки этой команды нет
-              // Пробуем точку возрождения DM:
-              c := RESPAWNPOINT_DM;
-
-              if g_Map_GetPointCount(c) = 0 then
-              begin // Точек возрождения DM нет
-                // Пробуем точку начала одиночной игры:
-                if Random(2) = 0 then
-                  c := RESPAWNPOINT_PLAYER1
-                else
-                  c := RESPAWNPOINT_PLAYER2;
-
-                if g_Map_GetPointCount(c) = 0 then
-                begin // Этой точки нет
-                  // Пробуем противоположную:
-                  if c = RESPAWNPOINT_PLAYER1 then
-                    c := RESPAWNPOINT_PLAYER2
-                  else
-                    c := RESPAWNPOINT_PLAYER1;
-
-                  if g_Map_GetPointCount(c) = 0 then
-                  begin // Точек одиночной игры нет
-                    // Пробуем другую команду:
-                    if FTeam = TEAM_RED then
-                      c := RESPAWNPOINT_BLUE
-                    else
-                      c := RESPAWNPOINT_RED;
-                  end;
-                end;
-              end;
-            end;
-          end;
-        end; // ... TDM / CTF
-
     // Берсерк не сохраняется между уровнями:
       FRulez := FRulez-[R_BERSERK];
     end
   else // "Одиночная игра"/"Кооп"
     begin
-    // Еще нельзя возродиться:
-      if FTime[T_RESPAWN] > gTime then
-        Exit;
-
-    // Просрал все жизни:
-      if FNoRespawn then
-      begin
-        if not FSpectator then Spectate(True);
-        FWantsInGame := True;
-        Exit;
-      end;
-
-    // Точка появления игрока:
-      if (Self = gPlayer1) and (gGameSettings.GameMode <> GM_COOP) then
-        c := RESPAWNPOINT_PLAYER1
-      else
-        if (Self = gPlayer2) and (gGameSettings.GameMode <> GM_COOP) then
-          c := RESPAWNPOINT_PLAYER2
-        else
-        begin
-          if gLastSpawnUsed = RESPAWNPOINT_PLAYER1 then // Боты или кооп
-            c := RESPAWNPOINT_PLAYER2
-          else
-            c := RESPAWNPOINT_PLAYER1;
-        end;
-
-      if g_Map_GetPointCount(c) = 0 then
-      begin // Правильной точки появления нет
-        // Пробуем противоположную точку:
-        if c = RESPAWNPOINT_PLAYER1 then
-          c := RESPAWNPOINT_PLAYER2
-        else
-          c := RESPAWNPOINT_PLAYER1;
-
-        if g_Map_GetPointCount(c) = 0 then
-        begin // Противоположной точки тоже нет
-          // Пробуем командную точку:
-          if Random(2) = 0 then
-            c := RESPAWNPOINT_RED
-          else
-            c := RESPAWNPOINT_BLUE;
-
-          if g_Map_GetPointCount(c) = 0 then
-          begin // Этой точки нет
-            // Пробуем другую команду:
-            if c = RESPAWNPOINT_RED then
-              c := RESPAWNPOINT_BLUE
-            else
-              c := RESPAWNPOINT_RED;
-
-            if g_Map_GetPointCount(c) = 0 then
-            begin // Остается только точка DM:
-              c := RESPAWNPOINT_DM;
-
-              // Если точек возрождения DM нет, то все
-            end;
-          end;
-        end;
-      end;
-
-      gLastSpawnUsed := c;
-
     // Берсерк и ключи не сохраняются между уровнями:
       FRulez := FRulez-[R_KEY_RED, R_KEY_GREEN, R_KEY_BLUE, R_BERSERK];
     end;
+
+// Получаем точку спауна игрока:
+  c := GetRespawnPoint();
 
   ReleaseKeys();
   SetFlag(FLAG_NONE);
@@ -4146,71 +4071,13 @@ begin
 end;
 
 procedure TPlayer.Spectate(NoMove: Boolean = False);
-var
-  c: Integer;
-  RespawnPoint: TRespawnPoint;
 begin
   if FLive then
     Kill(K_EXTRAHARDKILL, FUID, HIT_SOME)
   else if (not NoMove) then
   begin
-    // Точка возрождения DM:
-    c := RESPAWNPOINT_DM;
-
-    if g_Map_GetPointCount(c) = 0 then
-    begin // Точек возрождения DM нет
-      // Пробуем точку начала одиночной игры:
-      if Random(2) = 0 then
-        c := RESPAWNPOINT_PLAYER1
-      else
-        c := RESPAWNPOINT_PLAYER2;
-
-      if g_Map_GetPointCount(c) = 0 then
-      begin // Этой точки нет
-        // Пробуем противоположную:
-        if c = RESPAWNPOINT_PLAYER1 then
-          c := RESPAWNPOINT_PLAYER2
-        else
-          c := RESPAWNPOINT_PLAYER1;
-
-        if g_Map_GetPointCount(c) = 0 then
-        begin // Точек игроков нет
-          // Пробуем командную точку:
-          if Random(2) = 0 then
-            c := RESPAWNPOINT_RED
-          else
-            c := RESPAWNPOINT_BLUE;
-
-          if g_Map_GetPointCount(c) = 0 then
-          begin // Этой точки нет
-            // Пробуем другую команду:
-            if c = RESPAWNPOINT_RED then
-              c := RESPAWNPOINT_BLUE
-            else
-              c := RESPAWNPOINT_RED;
-          end
-          else
-            c := -1;
-        end;
-      end;
-    end;
-
-    if c = -1 then
-    begin
-      GameX := gMapInfo.Width div 2;
-      GameY := gMapInfo.Height div 2;
-    end
-    else
-      if not g_Map_GetPoint(c, RespawnPoint) then
-      begin
-        GameX := gMapInfo.Width div 2;
-        GameY := gMapInfo.Height div 2;
-      end
-      else
-      begin
-        GameX := RespawnPoint.X;
-        GameY := RespawnPoint.Y;
-      end;
+    GameX := gMapInfo.Width div 2;
+    GameY := gMapInfo.Height div 2;
   end;
   FXTo := GameX;
   FYTo := GameY;
