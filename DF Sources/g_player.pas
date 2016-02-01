@@ -2152,9 +2152,25 @@ begin
 end;
 
 procedure TPlayer.Draw();
+var
+  ID: DWORD;
+  w, h: Word;
 begin
   if FLive then
-    if (FMegaRulez[MR_INVIS] > gTime) then
+  begin
+    if (FMegaRulez[MR_INVUL] > gTime) and (gPlayerDrawn <> Self) then
+      if g_Texture_Get('TEXTURE_PLAYER_INVULPENTA', ID) then
+      begin
+        e_GetTextureSize(ID, @w, @h);
+        if FDirection = D_LEFT then
+          e_Draw(ID, FObj.X+FObj.Rect.X+(FObj.Rect.Width div 2)-(w div 2)+4,
+                     FObj.Y+FObj.Rect.Y+(FObj.Rect.Height div 2)-(h div 2)-7, 0, True, False)
+        else
+          e_Draw(ID, FObj.X+FObj.Rect.X+(FObj.Rect.Width div 2)-(w div 2)-2,
+                     FObj.Y+FObj.Rect.Y+(FObj.Rect.Height div 2)-(h div 2)-7, 0, True, False);
+      end;
+
+    if FMegaRulez[MR_INVIS] > gTime then
     begin
       if (gPlayerDrawn <> nil) and ((Self = gPlayerDrawn) or
          ((FTeam = gPlayerDrawn.Team) and (gGameSettings.GameMode <> GM_DM))) then
@@ -2164,6 +2180,7 @@ begin
     end
     else
       FModel.Draw(FObj.X, FObj.Y);
+  end;
 
   if g_debug_Frames then
   begin
