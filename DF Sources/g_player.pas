@@ -2280,7 +2280,6 @@ var
   cw, ch: Byte;
   s: string;
   stat: TPlayerStatArray;
-  b: Boolean;
 begin
   X := gPlayerScreenSize.X;
   SY := gPlayerScreenSize.Y;
@@ -2378,11 +2377,7 @@ begin
   else
     e_Draw(gItemsTexturesID[ITEM_MEDKIT_LARGE], X+37, Y+45, 0, True, False);
 
-  if FArmor >= 150 then
-    b := g_Texture_Get('TEXTURE_PLAYER_ARMOR2HUD', ID)
-  else
-    b := g_Texture_Get('TEXTURE_PLAYER_ARMOR1HUD', ID);
-  if b then
+  if g_Texture_Get('TEXTURE_PLAYER_ARMORHUD', ID) then
     e_Draw(ID, X+36, Y+77, 0, True, False);
 
   s := IntToStr(IfThen(FHealth > 0, FHealth, 0));
