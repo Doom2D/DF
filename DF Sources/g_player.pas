@@ -499,6 +499,7 @@ const
   PLAYER_SUIT_TIME    = 30000;
   PLAYER_INVUL_TIME   = 30000;
   PLAYER_INVIS_TIME   = 35000;
+  FRAG_COMBO_TIME = 3000;
   VEL_SW  = 4;
   VEL_FLY = 6;
   ANGLE_RIGHTUP   = 55;
@@ -5466,7 +5467,7 @@ var
 begin
   if (gGameSettings.GameMode in [GM_COOP, GM_SINGLE]) or g_Game_IsClient then
     Exit;
-  if gTime - FLastFrag < 2000 then
+  if gTime - FLastFrag < FRAG_COMBO_TIME then
   begin
     if FFragCombo < 5 then
       Inc(FFragCombo);
