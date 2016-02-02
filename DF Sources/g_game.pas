@@ -3170,18 +3170,21 @@ begin
 end;
 
 procedure g_Game_RemovePlayer();
+var
+  Pl: TPlayer;
 begin
   if ((not gGameOn) and (gState <> STATE_INTERCUSTOM))
   or (not (gGameSettings.GameType in [GT_CUSTOM, GT_SERVER, GT_CLIENT])) then
     Exit;
-  if gPlayer2 <> nil then
+  Pl := gPlayer2;
+  if Pl <> nil then
   begin
     if g_Game_IsServer then
     begin
-      gPlayer2.Lives := 0;
-      gPlayer2.Kill(K_SIMPLEKILL, 0, HIT_DISCON);
-      g_Console_Add(Format(_lc[I_PLAYER_LEAVE], [gPlayer2.Name]), True);
-      g_Player_Remove(gPlayer2.UID);
+      Pl.Lives := 0;
+      Pl.Kill(K_SIMPLEKILL, 0, HIT_DISCON);
+      g_Console_Add(Format(_lc[I_PLAYER_LEAVE], [Pl.Name]), True);
+      g_Player_Remove(Pl.UID);
 
       if g_Game_IsNet and NetUseMaster then
         g_Net_Slist_Update;
@@ -3189,14 +3192,15 @@ begin
       gPlayer2 := nil;
     Exit;
   end;
-  if gPlayer1 <> nil then
+  Pl := gPlayer1;
+  if Pl <> nil then
   begin
     if g_Game_IsServer then
     begin
-      gPlayer1.Lives := 0;
-      gPlayer1.Kill(K_SIMPLEKILL, 0, HIT_DISCON);
-      g_Console_Add(Format(_lc[I_PLAYER_LEAVE], [gPlayer1.Name]), True);
-      g_Player_Remove(gPlayer1.UID);
+      Pl.Lives := 0;
+      Pl.Kill(K_SIMPLEKILL, 0, HIT_DISCON);
+      g_Console_Add(Format(_lc[I_PLAYER_LEAVE], [Pl.Name]), True);
+      g_Player_Remove(Pl.UID);
 
       if g_Game_IsNet and NetUseMaster then
         g_Net_Slist_Update;
