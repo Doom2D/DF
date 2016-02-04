@@ -1831,8 +1831,8 @@ begin
   with TGUIMainMenu(Menu.AddChild(TGUIMainMenu.Create(gMenuFont, _lc[I_MENU_MULTIPLAYER]))) do
   begin
     Name := 'mmNetGameMenu';
-    AddButton(nil, _lc[I_MENU_START_SERVER], 'NetServerMenu');
     AddButton(@ProcRecallAddress, _lc[I_MENU_START_CLIENT], 'NetClientMenu');
+    AddButton(nil, _lc[I_MENU_START_SERVER], 'NetServerMenu');
   end;
   Menu.DefControl := 'mmNetGameMenu';
   g_GUI_AddWindow(Menu);
