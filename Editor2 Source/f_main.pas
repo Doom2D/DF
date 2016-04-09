@@ -6175,37 +6175,51 @@ begin
   MapTestForm.ShowModal();
 end;
 
-procedure TMainForm.miTestMapClick(Sender: TObject);
+// TODO: this function is standard in FPC! delete this definition
+//       when moving to lazarus
+function ExecuteProcess(Path: String; CmdLine: String): Integer;
 var
-  NewMap: Boolean;
-  cmd, dir, mapWAD, mapToRun: String;
-  opt: LongWord;
-  time: Integer;
   si: STARTUPINFO;
   pi: PROCESS_INFORMATION;
+  dir: String;
+begin
+  Result := -1;
+
+  dir := ExtractFilePath(Path);
+
+  ZeroMemory(@si, SizeOf(si));
+  si.cb := SizeOf(si);
+  ZeroMemory(@pi, SizeOf(pi));
+
+  if not CreateProcess(nil, PChar('"' + Path + '"' + CmdLine),
+                       nil, nil, False, 0, nil,
+                       PChar(dir),
+                       si, pi) then Exit;
+
+  WaitForSingleObject(pi.hProcess, INFINITE);
+
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
+  
+  Result := 0;
+end;
+
+procedure TMainForm.miTestMapClick(Sender: TObject);
+var
+  cmd, mapWAD, mapToRun: String;
+  opt: LongWord;
+  time: Integer;
   lpMsgBuf: PChar;
 begin
-// Новая карта:
-  NewMap := OpenedMap = '';
-  if NewMap then
-  begin
   // Сохраняем временную карту:
-    time := 0;
-    repeat
-      mapWAD := ExtractFilePath(TestD2dExe) + Format('maps\temp%.4d.wad', [time]);
-      Inc(time);
-    until not FileExists(mapWAD);
-    mapToRun := mapWAD + ':\' + TEST_MAP_NAME;
-    SaveMap(mapToRun);
-  end else
-  begin
-  // Сохраняем под тестовым именем:
-    g_ProcessResourceStr(OpenedMap, mapWAD, cmd, dir);
-    mapToRun := mapWAD + ':\' + TEST_MAP_NAME;
-    time := g_GetFileTime(mapWAD);
-    SaveMap(mapToRun);
-    g_SetFileTime(mapWAD, time);
-  end;
+  time := 0;
+  repeat
+    mapWAD := ExtractFilePath(TestD2dExe) + Format('maps\temp%.4d.wad', [time]);
+    Inc(time);
+  until not FileExists(mapWAD);
+  mapToRun := mapWAD + ':\' + TEST_MAP_NAME;
+  SaveMap(mapToRun);
+
   mapToRun := ExtractRelativePath(ExtractFilePath(TestD2dExe) + 'maps\', mapToRun);
 
 // Опции игры:
@@ -6221,12 +6235,8 @@ begin
   if TestOptionsMonstersDM then
     opt := opt + 16;
 
-// Каталог с Doom2DF.exe:
-  dir := ExtractFilePath(TestD2dExe);
-
 // Составляем командную строку:
-  cmd := '"' + TestD2dExe + '"';
-  cmd := cmd + ' -map "' + mapToRun + '"';
+  cmd := ' -map "' + mapToRun + '"';
   cmd := cmd + ' -gm ' + TestGameMode;
   cmd := cmd + ' -limt ' + TestLimTime;
   cmd := cmd + ' -lims ' + TestLimScore;
@@ -6236,21 +6246,11 @@ begin
     cmd := cmd + ' --close';
 
   cmd := cmd + ' --debug';
-
-  if NewMap then
-    cmd := cmd + ' --tempdelete'
-  else
-    cmd := cmd + ' --testdelete';
+  cmd := cmd + ' --tempdelete';
 
 // Запускаем:
-  ZeroMemory(@si, SizeOf(si));
-  si.cb := SizeOf(si);
-  ZeroMemory(@pi, SizeOf(pi));
-
-  if not CreateProcess(nil, PChar(cmd),
-                       nil, nil, False, 0, nil,
-                       PChar(dir),
-                       si, pi) then
+  Application.Minimize();
+  if ExecuteProcess(TestD2dExe, cmd) < 0 then
   begin
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER or FORMAT_MESSAGE_FROM_SYSTEM,
                   nil, GetLastError(), LANG_SYSTEM_DEFAULT,
@@ -6259,6 +6259,9 @@ begin
                PChar(_lc[I_MSG_EXEC_ERROR]),
                MB_OK or MB_ICONERROR);
   end;
+
+  DeleteFile(mapWAD);
+  Application.Restore();
 end;
 
 procedure TMainForm.sbVerticalScroll(Sender: TObject;
