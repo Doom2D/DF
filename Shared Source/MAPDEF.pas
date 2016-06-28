@@ -13,7 +13,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *)
-{$MODE DELPHI}
 unit MAPDEF;
 
 {
@@ -220,10 +219,10 @@ const
   TEXTURE_NAME_ACID1 = '_water_1';
   TEXTURE_NAME_ACID2 = '_water_2';
 
-  TEXTURE_SPECIAL_WATER = DWORD(-1);
-  TEXTURE_SPECIAL_ACID1 = DWORD(-2);
-  TEXTURE_SPECIAL_ACID2 = DWORD(-3);
-  TEXTURE_NONE = DWORD(-4);
+  TEXTURE_SPECIAL_WATER = -1;
+  TEXTURE_SPECIAL_ACID1 = -2;
+  TEXTURE_SPECIAL_ACID2 = -3;
+  TEXTURE_NONE = -4;
 
 type
   TPoint = packed record
@@ -335,12 +334,6 @@ type
                              SCRArg: Integer);
   end;
 
-{$INCLUDE mapstructsizes.inc}
-
 implementation
-
-uses SysUtils;
-
-{$INCLUDE mapstructio.inc}
 
 end.

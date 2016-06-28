@@ -1603,6 +1603,21 @@ begin
                   MaxLength := 3;
                 end;
               end;
+
+           TRIGGER_SCRIPT:
+             begin
+               with ItemProps[InsertRow(_lc[I_PROP_TR_SCRIPT_PROC], Data.SCRProc, True)-1] do
+               begin
+                 EditStyle := esSimple;
+                 MaxLength := 63;
+               end;
+
+               with ItemProps[InsertRow(_lc[I_PROP_TR_SCRIPT_ARG], IntToStr(Data.SCRArg), True)-1] do
+               begin
+                 EditStyle := esSimple;
+                 MaxLength := 9;
+               end;
+             end;
           end; //case TriggerType
         end;
       end; // OBJECT_TRIGGER:
@@ -3753,6 +3768,11 @@ begin
                       trigger.Data.FXSpreadR := 5;
                       trigger.Data.FXSpreadU := 4;
                       trigger.Data.FXSpreadD := 0;
+                    end;
+
+                  TRIGGER_SCRIPT:
+                    begin
+                      trigger.Data.SCRArg := 0;
                     end;
                 end;
 
