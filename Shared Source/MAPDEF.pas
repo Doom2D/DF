@@ -1,3 +1,19 @@
+(* Copyright (C)  DooM 2D:Forever Developers
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *)
+{$MODE DELPHI}
 unit MAPDEF;
 
 {
@@ -11,7 +27,7 @@ MAPDEF.PAS бепяхъ нр 22.03.09
 interface
 
 uses
-  MAPSTRUCT, Windows;
+  MAPSTRUCT;
 
 const
   PANEL_NONE      = 0;
@@ -116,7 +132,7 @@ const
   MONSTER_MAN    = 20;
 
   TRIGGER_NONE            = 0;
-  TRIGGER_EXIT	          = 1;
+  TRIGGER_EXIT            = 1;
   TRIGGER_TELEPORT        = 2;
   TRIGGER_OPENDOOR        = 3;
   TRIGGER_CLOSEDOOR       = 4;
@@ -144,7 +160,8 @@ const
   TRIGGER_HEALTH          = 26;
   TRIGGER_SHOT            = 27;
   TRIGGER_EFFECT          = 28;
-  TRIGGER_MAX             = 28;
+  TRIGGER_SCRIPT          = 29;
+  TRIGGER_MAX             = 29;
 
   TRIGGER_SHOT_PISTOL  = 0;
   TRIGGER_SHOT_BULLET  = 1;
@@ -208,7 +225,11 @@ const
   TEXTURE_SPECIAL_ACID2 = DWORD(-3);
   TEXTURE_NONE = DWORD(-4);
 
-Type
+type
+  TPoint = packed record
+    X, Y: LongInt;
+  end;
+
   TTriggerData = record
     case Byte of
       0: (Default: Byte128);
@@ -310,8 +331,16 @@ Type
                              FXSpreadR: Byte;
                              FXSpreadU: Byte;
                              FXSpreadD: Byte);
+      TRIGGER_SCRIPT:       (SCRProc: Char64;
+                             SCRArg: Integer);
   end;
 
+{$INCLUDE mapstructsizes.inc}
+
 implementation
+
+uses SysUtils;
+
+{$INCLUDE mapstructio.inc}
 
 end.
