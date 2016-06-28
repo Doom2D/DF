@@ -4914,6 +4914,16 @@ begin
                 Data.FXSpreadD := Min(Max(
                   StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPD]], 0), 0), 255);
               end;
+
+            TRIGGER_SCRIPT:
+              begin
+                s := vleObjectProperty.Values[_lc[I_PROP_TR_SCRIPT_PROC]];
+                ZeroMemory(@Data.SCRProc[0], 64);
+                if s <> '' then
+                  CopyMemory(@Data.SCRProc[0], @s[1], Min(Length(s), 64));
+
+                Data.SCRArg := StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_SCRIPT_ARG]], 0);
+              end;
           end;
         end;
       end;
