@@ -151,6 +151,7 @@ Type
     I_ARRAY_TR_HEALTH,
     I_ARRAY_TR_SHOT,
     I_ARRAY_TR_EFFECT,
+    I_ARRAY_TR_SCRIPT,
 
     I_PROP_ID,
     I_PROP_X,
@@ -281,6 +282,8 @@ Type
     I_PROP_TR_EFFECT_BLOOD,
     I_PROP_TR_EFFECT_SPARK,
     I_PROP_TR_EFFECT_BUBBLE,
+    I_PROP_TR_SCRIPT_PROC,
+    I_PROP_TR_SCRIPT_ARG,
 
     I_MSG_ERROR,
     I_MSG_WRONG_TEXWIDTH,
@@ -912,6 +915,8 @@ Const
                                        'Турель'),
     ('ARRAY TR EFFECT',                'Effect',
                                        'Эффект'),
+    ('ARRAY TR SCRIPT',                'Script',
+                                       'Скрипт'),
 
     ('PROP ID',                        'ID',
                                        'ID'),
@@ -1170,6 +1175,10 @@ Const
                                        'Искры'),
     ('PROP TR EFFECT BUBBLE',          'Bubbles',
                                        'Пузырьки'),
+    ('PROP TR SCRIPT PROC',            'Function name',
+                                       'Имя функции'),
+    ('PROP TR SCRIPT ARG',             'Argument',
+                                       'Доп. аргумент'),
 
     ('MSG ERROR',                      'Error',
                                        'Ошибка'),
@@ -1926,6 +1935,7 @@ begin
   TriggerNames[TRIGGER_HEALTH] := _lc[I_ARRAY_TR_HEALTH];
   TriggerNames[TRIGGER_SHOT] := _lc[I_ARRAY_TR_SHOT];
   TriggerNames[TRIGGER_EFFECT] := _lc[I_ARRAY_TR_EFFECT];
+  TriggerNames[TRIGGER_SCRIPT] := _lc[I_ARRAY_TR_SCRIPT];
 
 // Установка значений в панели выбора объектов:
   with MainForm do

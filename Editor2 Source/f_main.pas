@@ -1609,6 +1609,21 @@ begin
                   MaxLength := 3;
                 end;
               end;
+
+           TRIGGER_SCRIPT:
+             begin
+               with ItemProps[InsertRow(_lc[I_PROP_TR_SCRIPT_PROC], Data.SCRProc, True)-1] do
+               begin
+                 EditStyle := esSimple;
+                 MaxLength := 63;
+               end;
+
+               with ItemProps[InsertRow(_lc[I_PROP_TR_SCRIPT_ARG], IntToStr(Data.SCRArg), True)-1] do
+               begin
+                 EditStyle := esSimple;
+                 MaxLength := 9;
+               end;
+             end;
           end; //case TriggerType
         end;
       end; // OBJECT_TRIGGER:
@@ -3760,6 +3775,11 @@ begin
                       trigger.Data.FXSpreadU := 4;
                       trigger.Data.FXSpreadD := 0;
                     end;
+
+                  TRIGGER_SCRIPT:
+                    begin
+                      trigger.Data.SCRArg := 0;
+                    end;
                 end;
 
                 Undo_Add(OBJECT_TRIGGER, AddTrigger(trigger));
@@ -4911,6 +4931,16 @@ begin
                   StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPU]], 0), 0), 255);
                 Data.FXSpreadD := Min(Max(
                   StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_EFFECT_SPD]], 0), 0), 255);
+              end;
+
+            TRIGGER_SCRIPT:
+              begin
+                s := vleObjectProperty.Values[_lc[I_PROP_TR_SCRIPT_PROC]];
+                ZeroMemory(@Data.SCRProc[0], 64);
+                if s <> '' then
+                  CopyMemory(@Data.SCRProc[0], @s[1], Min(Length(s), 64));
+
+                Data.SCRArg := StrToIntDef(vleObjectProperty.Values[_lc[I_PROP_TR_SCRIPT_ARG]], 0);
               end;
           end;
         end;

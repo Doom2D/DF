@@ -4690,7 +4690,7 @@ procedure DebugCommands(P: SArray);
 var
   a, b: Integer;
   cmd: string;
-  pt: TPoint;
+  pt: Windows.TPoint;
 begin
 // Команды отладочного режима:
   if gDebugMode then
