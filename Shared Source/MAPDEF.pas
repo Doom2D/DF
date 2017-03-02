@@ -171,6 +171,11 @@ const
   TRIGGER_SHOT_TARGET_MONPLR = 5;
   TRIGGER_SHOT_TARGET_PLRMON = 6;
 
+  TRIGGER_SHOT_AIM_DEFAULT   = 0;
+  TRIGGER_SHOT_AIM_ALLMAP    = 1;
+  TRIGGER_SHOT_AIM_TRACE     = 2;
+  TRIGGER_SHOT_AIM_TRACEALL  = 3;
+
   TRIGGER_EFFECT_PARTICLE  = 0;
   TRIGGER_EFFECT_ANIMATION = 1;
 
@@ -288,7 +293,7 @@ Type
                              ShotType: Byte;
                              ShotTarget: Byte;
                              ShotSound: Boolean;
-                             ShotAllMap: Boolean;
+                             ShotAim: Byte;
                              ShotPanelID: Integer;
                              ShotIntSight: Word;
                              ShotAngle: Word;
