@@ -5571,6 +5571,8 @@ begin
       lbTypeSelect.Items.Add(ItemToStr(ITEM_HELMET));
       lbTypeSelect.Items.Add(ItemToStr(ITEM_JETPACK));
       lbTypeSelect.Items.Add(ItemToStr(ITEM_INVIS));
+      lbTypeSelect.Items.Add(ItemToStr(ITEM_WEAPON_FLAMETHROWER));
+      lbTypeSelect.Items.Add(ItemToStr(ITEM_AMMO_FUELCAN));
 
       b := StrToItem(Values[Key]);
       if b >= ITEM_BOTTLE then
